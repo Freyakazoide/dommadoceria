@@ -1,0 +1,96 @@
+/* Estilos gerais para a página */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #fdfaf6;
+    color: #4a4a4a;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #d63384; /* Um tom de rosa */
+}
+
+/* Estilo para a barra de navegação */
+nav {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px; /* Espaço entre os botões */
+}
+
+nav button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: 1px solid #d63384;
+    background-color: white;
+    color: #d63384;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+nav button:hover {
+    background-color: #d63384;
+    color: white;
+}
+
+/* Container principal */
+main {
+    width: 100%;
+    max-width: 800px; /* Limita a largura para melhor leitura */
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Classe para esconder as seções que não estão ativas */
+.hidden {
+    display: none;
+}
+
+/* Estilos para formulários */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+    border: 1px solid #eee;
+}
+
+form input, form button {
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+form button {
+    background-color: #d63384;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+}
+
+form button:hover {
+    background-color: #b02a6c;
+}
+
+/* Linha horizontal para separar */
+hr {
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 20px 0;
+}
