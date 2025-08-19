@@ -4,123 +4,165 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Domma Doceria - Gestão Simples</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header>
+        <img src="domma.png" alt="Logo da Domma Doceria" class="logo">
         <h1>Domma Doceria</h1>
         <p>Seu assistente de gestão de doces</p>
     </header>
 
     <nav>
         <button data-target="tela-insumos">Insumos</button>
-        <button data-target="tela-receitas">Receitas</button>
-        <button data-target="tela-calculo">Calcular Preço</button>
+        <button data-target="tela-produtos">Produtos</button>
+        <!-- A tela de cálculo foi removida do menu principal -->
         <button data-target="tela-vendas">Registrar Venda</button>
     </nav>
 
     <main>
-<section id="tela-insumos" class="tela">
-    <h2>Estoque de Insumos</h2>
-    
-    <form id="form-insumos">
-        <h3>Adicionar Novo Insumo</h3>
-        <input type="text" id="nome-insumo" placeholder="Nome do insumo (ex: Farinha de Trigo)" required>
-        <input type="text" id="unidade-medida" placeholder="Unidade (ex: kg, g, unidade)" required>
-        <input type="number" id="preco-unitario" placeholder="Preço unitário (ex: 4.50)" step="0.01" required>
-        <button type="submit">Salvar Insumo</button>
-    </form>
+        <!-- TELA DE INSUMOS (Sem alterações) -->
+        <section id="tela-insumos" class="tela">
+            <h2>Estoque de Insumos</h2>
+            <form id="form-insumos">
+                <h3>Adicionar Novo Insumo</h3>
+                <input type="text" id="nome-insumo" placeholder="Nome do insumo (ex: Farinha de Trigo)" required>
+                <input type="text" id="unidade-medida" placeholder="Unidade (ex: kg, g, unidade)" required>
+                <input type="number" id="preco-unitario" placeholder="Preço unitário (ex: 4.50)" step="0.01" required>
+                <button type="submit">Salvar Insumo</button>
+            </form>
+            <hr>
+            <h3>Insumos Cadastrados</h3>
+            <table class="tabela-bonita">
+                <thead>
+                    <tr>
+                        <th data-column="nome">Nome <span class="sort-indicator"></span></th>
+                        <th>Unidade</th>
+                        <th data-column="preco_unitario">Preço <span class="sort-indicator"></span></th>
+                        <th style="text-align: right;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabela-insumos"></tbody>
+            </table>
+        </section>
 
-    <hr>
-
-    <h3>Insumos Cadastrados</h3>
-    <ul id="lista-insumos">
-        <li>Carregando...</li>
-    </ul>
-</section>
-
-<section id="tela-receitas" class="tela hidden">
-    <h2>Minhas Receitas</h2>
-    
-    <form id="form-produtos">
-        <h3>1. Cadastrar Novo Produto</h3>
-        <input type="text" id="nome-produto" placeholder="Nome do produto (ex: Bolo de Cenoura)" required>
-        <button type="submit">Salvar Produto</button>
-    </form>
-
-    <hr>
-
-    <h3>2. Montar a Receita</h3>
-    
-    <label for="select-produto">Selecione o Produto:</label>
-    <select id="select-produto">
-        <option>Nenhum produto selecionado</option>
-        </select>
-
-    <form id="form-receita-item" class="hidden">
-        <label for="select-insumo">Adicionar Insumo:</label>
-        <select id="select-insumo" required>
-            <option value="">Selecione o insumo...</option>
-            </select>
-        <input type="number" id="quantidade-insumo" placeholder="Quantidade" step="0.01" required>
-        <button type="submit">Adicionar à Receita</button>
-    </form>
-
-    <h4>Ingredientes da Receita:</h4>
-    <ul id="lista-receita-items">
-        <li>Selecione um produto para ver sua receita.</li>
-    </ul>
-</section>
-
-<section id="tela-calculo" class="tela hidden">
-    <h2>Calculadora de Preços</h2>
-    
-    <label for="select-produto-calculo"><strong>1. Selecione o Produto:</strong></label>
-    <select id="select-produto-calculo">
-        <option value="">Selecione...</option>
-        </select>
-    <button id="btn-calcular-preco" style="margin-top: 10px;">Calcular Preço de Custo</button>
-
-    <hr>
-
-    <h3><strong>2. Resultado do Cálculo:</strong></h3>
-    <div id="resultado-calculo">
-        <p>Selecione um produto e clique em calcular.</p>
-    </div>
-</section>
-
-<section id="tela-vendas" class="tela hidden">
-    <h2>Registro de Vendas</h2>
-    
-    <form id="form-vendas">
-        <h3>Adicionar Nova Venda</h3>
-        <label for="select-produto-venda">Produto Vendido:</label>
-        <select id="select-produto-venda" required>
-            <option value="">Selecione o produto...</option>
-            </select>
+        <!-- TELA DE PRODUTOS (Antiga Receitas, agora simplificada) -->
+        <section id="tela-produtos" class="tela hidden">
+            <h2>Meus Produtos</h2>
+            <form id="form-produtos">
+                <h3>Cadastrar Novo Produto</h3>
+                <input type="text" id="nome-produto" placeholder="Nome do produto (ex: Bolo de Cenoura)" required>
+                <button type="submit">Salvar Produto</button>
+            </form>
+            <hr>
+            <h3>Produtos Cadastrados</h3>
+            <table class="tabela-bonita">
+                <thead>
+                    <tr>
+                        <th>Nome do Produto</th>
+                        <th>Preço de Venda</th>
+                        <th style="text-align: right;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpo-tabela-produtos"></tbody>
+            </table>
+        </section>
         
-        <label for="quantidade-vendida">Quantidade:</label>
-        <input type="number" id="quantidade-vendida" placeholder="Ex: 10" required>
-        
-        <label for="valor-total-venda">Valor Total (R$):</label>
-        <input type="number" id="valor-total-venda" placeholder="Ex: 50.00" step="0.01" required>
-        
-        <button type="submit">Registrar Venda</button>
-    </form>
-
-    <hr>
-
-    <h3>Últimas Vendas Registradas</h3>
-    <ul id="lista-vendas">
-        <li>Carregando...</li>
-    </ul>
-</section>
+        <!-- TELA DE VENDAS (Sem alterações) -->
+        <section id="tela-vendas" class="tela hidden">
+            <h2>Registro de Vendas</h2>
+            <form id="form-vendas">
+                <h3>Adicionar Nova Venda</h3>
+                <label for="select-produto-venda">Produto Vendido:</label>
+                <select id="select-produto-venda" required></select>
+                <label for="quantidade-vendida">Quantidade:</label>
+                <input type="number" id="quantidade-vendida" placeholder="Ex: 10" required>
+                <label for="valor-total-venda">Valor Total (R$):</label>
+                <input type="number" id="valor-total-venda" placeholder="Ex: 50.00" step="0.01" required>
+                <button type="submit">Registrar Venda</button>
+            </form>
+            <hr>
+            <h3>Últimas Vendas Registradas</h3>
+            <ul id="lista-vendas"></ul>
+        </section>
     </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- MODAL DE EDIÇÃO DE INSUMO (Sem alterações) -->
+    <div id="modal-editar-insumo" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Editar Insumo</h2>
+            <form id="form-editar-insumo">
+                <input type="hidden" id="edit-insumo-id">
+                <label for="edit-nome-insumo">Nome do Insumo:</label>
+                <input type="text" id="edit-nome-insumo" required>
+                <label for="edit-unidade-medida">Unidade de Medida:</label>
+                <input type="text" id="edit-unidade-medida" required>
+                <label for="edit-preco-unitario">Preço Unitário (R$):</label>
+                <input type="number" id="edit-preco-unitario" step="0.01" required>
+                <button type="submit">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
 
-<script src="script.js" defer></script>
+    <!-- NOVO MODAL "TUDO EM UM" PARA GERENCIAR PRODUTOS -->
+    <div id="modal-gerenciar-produto" class="modal modal-grande">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Gerenciar Produto: <span id="nome-produto-modal"></span></h2>
+            <input type="hidden" id="gerenciar-produto-id">
+
+            <div class="modal-colunas">
+                <!-- Coluna da Esquerda: Ingredientes -->
+                <div class="modal-coluna">
+                    <h3><span class="emoji-titulo">🥣</span>Ingredientes</h3>
+                    <form id="form-adicionar-ingrediente">
+                        <label for="select-insumo-receita">Adicionar Insumo:</label>
+                        <select id="select-insumo-receita" required></select>
+                        <label for="quantidade-ingrediente">Quantidade:</label>
+                        <input type="number" id="quantidade-ingrediente" placeholder="Ex: 0.5" step="0.01" required>
+                        <button type="submit">+ Adicionar</button>
+                    </form>
+                    <hr>
+                    <h4>Ingredientes Atuais</h4>
+                    <ul id="lista-ingredientes-modal"></ul>
+                </div>
+
+                <!-- Coluna da Direita: Custos e Preço -->
+                <div class="modal-coluna">
+                    <h3><span class="emoji-titulo">💰</span>Custos e Preço Final</h3>
+                    <div id="analise-custos-container">
+                        <div class="linha-custo">
+                            <span>Custo de Ingredientes:</span>
+                            <strong id="custo-ingredientes-valor">R$ 0.00</strong>
+                        </div>
+                        <hr>
+                        <h4>Custos Adicionais</h4>
+                        <div id="lista-custos-adicionais"></div>
+                        <button id="btn-adicionar-custo" type="button" class="btn-secundario">+ Custo Adicional</button>
+                        <hr>
+                        <div class="linha-custo total">
+                            <span>CUSTO TOTAL DE PRODUÇÃO:</span>
+                            <strong id="custo-total-valor">R$ 0.00</strong>
+                        </div>
+                    </div>
+                    <div class="precificacao-final">
+                        <label for="margem-lucro">Margem de Lucro (%):</label>
+                        <input type="number" id="margem-lucro" value="100" step="1">
+                        <p class="preco-sugerido">Preço Sugerido: <strong id="preco-sugerido-valor">R$ 0.00</strong></p>
+                        <label for="preco-final-definido"><strong>Preço Final de Venda (Definido por você):</strong></label>
+                        <input type="number" id="preco-final-definido" step="0.01">
+                        <button id="btn-salvar-preco-venda">💾 Salvar Preço de Venda</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js" defer></script>
 
 </body>
 </html>
