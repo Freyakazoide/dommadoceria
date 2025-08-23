@@ -509,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
             corpoTabela.appendChild(tr);
         });
     }
-
+    
     async function atualizarTodosOsDados() {
         const [insumosResult, produtosResult, contatosResult] = await Promise.all([
             supabaseClient.from('insumos').select('*').order('nome'),
