@@ -2,7 +2,6 @@ const SUPABASE_URL = 'https://bujffxasexuglgmtloxv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amZmeGFzZXh1Z2xnbXRsb3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTY1NDAsImV4cCI6MjA3MTEzMjU0MH0.OmbttnQ6ThFCYuspr3IL2b25RULx_ZqoXUfcoN7KF_M';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ---===[ FUNÇÕES GLOBAIS DE AÇÃO (CHAMADAS PELO ONCLICK) ]===---
 function editarInsumo(id, nome, unidade, preco) {
     const modal = document.getElementById('modal-editar-insumo');
     document.getElementById('edit-insumo-id').value = id;
@@ -78,8 +77,8 @@ async function editarContato(contatoId) {
     document.getElementById('edit-contato-id').value = contato.id;
     document.getElementById('edit-contato-nome').value = contato.nome_razao_social;
     document.getElementById('edit-contato-documento').value = contato.cpf_cnpj;
-    document.getElementById('edit-contato-e-cliente').checked = contato.papeis.includes('Cliente');
-    document.getElementById('edit-contato-e-fornecedor').checked = contato.papeis.includes('Fornecedor');
+    document.getElementById('edit-contato-e-cliente').checked = (contato.papeis || []).includes('Cliente');
+    document.getElementById('edit-contato-e-fornecedor').checked = (contato.papeis || []).includes('Fornecedor');
     
     modal.style.display = 'block';
 }
@@ -536,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         insumosData.forEach(i => selectInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`);
         produtosData.filter(p => p.preco_venda > 0).forEach(p => selectProdutoNf.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`);
-        contatosData.filter(c => c.papeis.includes('Cliente')).forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
+        contatosData.filter(c => Array.isArray(c.papeis) && c.papeis.includes('Cliente')).forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
         
         await renderizarTabelaNotasFiscais();
     }
