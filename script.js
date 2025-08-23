@@ -75,11 +75,16 @@ async function editarContato(contatoId) {
     if (error) return alert('Erro ao carregar dados do contato.');
 
     document.getElementById('edit-contato-id').value = contato.id;
+    document.querySelector(`input[name="edit_tipo_pessoa"][value="${contato.tipo_pessoa}"]`).checked = true;
     document.getElementById('edit-contato-nome').value = contato.nome_razao_social;
     document.getElementById('edit-contato-documento').value = contato.cpf_cnpj;
+    document.getElementById('edit-contato-telefone').value = contato.telefone;
+    document.getElementById('edit-contato-email').value = contato.email;
+    document.getElementById('edit-contato-endereco').value = contato.endereco;
     document.getElementById('edit-contato-e-cliente').checked = (contato.papeis || []).includes('Cliente');
     document.getElementById('edit-contato-e-fornecedor').checked = (contato.papeis || []).includes('Fornecedor');
     
+    atualizarLabelsFormularioContato('edit-');
     modal.style.display = 'block';
 }
 
@@ -156,6 +161,7 @@ async function verDetalhesNota(notaId) {
     if (error) { container.innerHTML = '<p>Erro ao carregar detalhes.</p>'; return; }
 
     const { data: itens, errorItens } = await supabaseClient.from('nota_fiscal_itens').select(`*, produtos(nome)`).eq('nota_fiscal_id', notaId);
+    
     if (errorItens) { container.innerHTML = '<p>Erro ao carregar itens da nota.</p>'; return; }
 
     let html = `
@@ -167,9 +173,11 @@ async function verDetalhesNota(notaId) {
         <h4>Itens:</h4>
         <ul>
     `;
-    itens.forEach(item => {
-        html += `<li>${item.quantidade}x ${item.produtos.nome} - R$ ${Number(item.preco_unitario_momento).toFixed(2)} (un)</li>`;
-    });
+    if (Array.isArray(itens)) {
+        itens.forEach(item => {
+            html += `<li>${item.quantidade}x ${item.produtos.nome} - R$ ${Number(item.preco_unitario_momento).toFixed(2)} (un)</li>`;
+        });
+    }
     html += `</ul><hr><p class="linha-custo total"><strong>TOTAL: R$ ${Number(nota.valor_total).toFixed(2)}</strong></p>`;
     container.innerHTML = html;
 }
@@ -187,6 +195,27 @@ async function deletarNota(notaId) {
     const { error } = await supabaseClient.from('notas_fiscais').delete().match({ id: notaId });
     if (error) { alert('Erro ao deletar a nota fiscal.'); }
     else { alert('Nota fiscal deletada com sucesso.'); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+}
+
+function atualizarLabelsFormularioContato(prefixo = '') {
+    const radioName = prefixo ? 'edit_tipo_pessoa' : 'tipo_pessoa';
+    const tipo = document.querySelector(`input[name="${radioName}"]:checked`).value;
+    const labelNome = document.getElementById(`${prefixo}label-nome-contato`);
+    const labelDocumento = document.getElementById(`${prefixo}label-documento-contato`);
+    const inputNome = document.getElementById(`${prefixo}contato-nome`);
+    const inputDocumento = document.getElementById(`${prefixo}contato-documento`);
+
+    if (tipo === 'Física') {
+        labelNome.textContent = 'Nome Completo';
+        inputNome.placeholder = 'Nome do cliente';
+        labelDocumento.textContent = 'CPF';
+        inputDocumento.placeholder = '___.___.___-__';
+    } else {
+        labelNome.textContent = 'Razão Social';
+        inputNome.placeholder = 'Nome da empresa';
+        labelDocumento.textContent = 'CNPJ';
+        inputDocumento.placeholder = '__.___.___/____-__';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -356,7 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const corpoTabela = document.getElementById('corpo-tabela-contatos');
         corpoTabela.innerHTML = '';
         if (contatosData.length === 0) {
-            corpoTabela.innerHTML = '<tr><td colspan="3">Nenhum contato cadastrado.</td></tr>';
+            corpoTabela.innerHTML = '<tr><td colspan="4">Nenhum contato cadastrado.</td></tr>';
             return;
         }
         contatosData.forEach(contato => {
@@ -364,6 +393,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `
                 <td>${contato.nome_razao_social}</td>
                 <td>${(contato.papeis || []).join(', ')}</td>
+                <td>${contato.telefone || 'N/A'}</td>
                 <td class="actions-container">
                     <button class="btn-acao btn-warning" onclick="editarContato(${contato.id})">✏️</button>
                     <button class="btn-acao btn-danger" onclick="deletarContato(${contato.id}, '${contato.nome_razao_social}')">🗑️</button>
@@ -373,6 +403,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    document.querySelectorAll('input[name="tipo_pessoa"]').forEach(radio => {
+        radio.addEventListener('change', () => atualizarLabelsFormularioContato());
+    });
+    document.querySelectorAll('input[name="edit_tipo_pessoa"]').forEach(radio => {
+        radio.addEventListener('change', () => atualizarLabelsFormularioContato('edit-'));
+    });
+
     formContatos.addEventListener('submit', async (event) => {
         event.preventDefault();
         const papeis = [];
@@ -380,8 +417,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('contato-e-fornecedor').checked) papeis.push('Fornecedor');
 
         const contato = {
+            tipo_pessoa: document.querySelector('input[name="tipo_pessoa"]:checked').value,
             nome_razao_social: document.getElementById('contato-nome').value,
             cpf_cnpj: document.getElementById('contato-documento').value,
+            telefone: document.getElementById('contato-telefone').value,
+            email: document.getElementById('contato-email').value,
+            endereco: document.getElementById('contato-endereco').value,
             papeis: papeis
         };
         const { error } = await supabaseClient.from('contatos').insert([contato]);
@@ -397,8 +438,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('edit-contato-e-fornecedor').checked) papeis.push('Fornecedor');
 
         const contato = {
+            tipo_pessoa: document.querySelector('input[name="edit_tipo_pessoa"]:checked').value,
             nome_razao_social: document.getElementById('edit-contato-nome').value,
             cpf_cnpj: document.getElementById('edit-contato-documento').value,
+            telefone: document.getElementById('edit-contato-telefone').value,
+            email: document.getElementById('edit-contato-email').value,
+            endereco: document.getElementById('edit-contato-endereco').value,
             papeis: papeis
         };
         const { error } = await supabaseClient.from('contatos').update(contato).match({ id });

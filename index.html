@@ -81,8 +81,32 @@
             <section id="tela-contatos" class="tela hidden">
                 <h2>Contatos (Clientes e Fornecedores)</h2>
                 <form id="form-contatos">
-                    <input type="text" id="contato-nome" placeholder="Nome / Razão Social" required>
-                    <input type="text" id="contato-documento" placeholder="CPF / CNPJ">
+                    <div class="tipo-pessoa-container">
+                        <label><input type="radio" name="tipo_pessoa" value="Física" checked> Pessoa Física</label>
+                        <label><input type="radio" name="tipo_pessoa" value="Jurídica"> Pessoa Jurídica</label>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="contato-nome" id="label-nome-contato">Nome Completo</label>
+                            <input type="text" id="contato-nome" placeholder="Nome do cliente">
+                        </div>
+                        <div class="form-group">
+                            <label for="contato-documento" id="label-documento-contato">CPF</label>
+                            <input type="text" id="contato-documento" placeholder="___.___.___-__">
+                        </div>
+                        <div class="form-group">
+                            <label for="contato-telefone">Telefone</label>
+                            <input type="text" id="contato-telefone" placeholder="(  ) _____-____">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="contato-email">E-mail</label>
+                            <input type="email" id="contato-email" placeholder="email@exemplo.com">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="contato-endereco">Endereço</label>
+                            <input type="text" id="contato-endereco" placeholder="Rua, Número, Bairro, Cidade">
+                        </div>
+                    </div>
                     <div class="checkbox-container">
                         <label><input type="checkbox" id="contato-e-cliente" checked> É Cliente</label>
                         <label><input type="checkbox" id="contato-e-fornecedor"> É Fornecedor</label>
@@ -95,6 +119,7 @@
                         <tr>
                             <th>Nome / Razão Social</th>
                             <th>Papel</th>
+                            <th>Contato</th>
                             <th style="text-align: right;">Ações</th>
                         </tr>
                     </thead>
@@ -102,22 +127,18 @@
                 </table>
             </section>
 
-            <!-- TELA DE NOTAS DE SAÍDA (VENDAS) -->
             <section id="tela-notas-saida" class="tela hidden">
                 <h2>Notas de Saída (Vendas)</h2>
                 <div class="sub-nav">
                     <button class="sub-nav-link active" data-target="subtela-nova-saida">Nova Nota de Saída</button>
                     <button class="sub-nav-link" data-target="subtela-historico-saida">Histórico</button>
                 </div>
-
-                <!-- SUBTELA: CRIAR NOVA NOTA -->
                 <div id="subtela-nova-saida" class="subtela">
                     <div class="nota-fiscal-container">
                         <div class="nota-fiscal-coluna">
                             <h3>1. Dados da Nota</h3>
                             <label for="nf-cliente">Cliente:</label>
-                            <select id="nf-cliente" required></select>
-
+                            <select id="nf-cliente"></select>
                             <label for="nf-metodo-pagamento">Método de Pagamento:</label>
                             <select id="nf-metodo-pagamento">
                                 <option>Pix</option>
@@ -125,7 +146,6 @@
                                 <option>Cartão de Débito</option>
                                 <option>Cartão de Crédito</option>
                             </select>
-
                             <label for="nf-status-pagamento">Status do Pagamento:</label>
                             <select id="nf-status-pagamento">
                                 <option>Pago</option>
@@ -135,9 +155,9 @@
                             <h3>2. Adicionar Produtos</h3>
                             <form id="form-add-nf-item">
                                 <label for="nf-produto">Produto:</label>
-                                <select id="nf-produto" required></select>
+                                <select id="nf-produto"></select>
                                 <label for="nf-quantidade">Quantidade:</label>
-                                <input type="number" id="nf-quantidade" value="1" step="1" min="1" required>
+                                <input type="number" id="nf-quantidade" value="1" step="1" min="1">
                                 <button type="submit" class="btn-secundario">+ Adicionar Produto</button>
                             </form>
                         </div>
@@ -154,8 +174,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- SUBTELA: HISTÓRICO DE NOTAS -->
                 <div id="subtela-historico-saida" class="subtela hidden">
                     <table class="tabela-bonita">
                         <thead>
@@ -187,16 +205,15 @@
             <form id="form-editar-insumo">
                 <input type="hidden" id="edit-insumo-id">
                 <label for="edit-nome-insumo">Nome do Insumo:</label>
-                <input type="text" id="edit-nome-insumo" required>
+                <input type="text" id="edit-nome-insumo">
                 <label for="edit-unidade-medida">Unidade de Medida:</label>
-                <input type="text" id="edit-unidade-medida" required>
+                <input type="text" id="edit-unidade-medida">
                 <label for="edit-preco-unitario">Preço Unitário (R$):</label>
-                <input type="number" id="edit-preco-unitario" step="0.01" required>
+                <input type="number" id="edit-preco-unitario" step="0.01">
                 <button type="submit">Salvar Alterações</button>
             </form>
         </div>
     </div>
-
     <div id="modal-gerenciar-produto" class="modal modal-grande">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -207,9 +224,9 @@
                     <h3><span class="emoji-titulo">🥣</span>Ingredientes</h3>
                     <form id="form-adicionar-ingrediente">
                         <label for="select-insumo-receita">Adicionar Insumo:</label>
-                        <select id="select-insumo-receita" required></select>
+                        <select id="select-insumo-receita"></select>
                         <label for="quantidade-ingrediente">Quantidade:</label>
-                        <input type="number" id="quantidade-ingrediente" placeholder="Ex: 0.5" step="0.01" required>
+                        <input type="number" id="quantidade-ingrediente" placeholder="Ex: 0.5" step="0.01">
                         <button type="submit">+ Adicionar</button>
                     </form>
                     <hr>
@@ -245,17 +262,26 @@
             </div>
         </div>
     </div>
-
     <div id="modal-editar-contato" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Editar Contato</h2>
             <form id="form-editar-contato">
                 <input type="hidden" id="edit-contato-id">
-                <label for="edit-contato-nome">Nome / Razão Social:</label>
-                <input type="text" id="edit-contato-nome" required>
-                <label for="edit-contato-documento">CPF / CNPJ:</label>
+                <div class="tipo-pessoa-container">
+                    <label><input type="radio" name="edit_tipo_pessoa" value="Física"> Pessoa Física</label>
+                    <label><input type="radio" name="edit_tipo_pessoa" value="Jurídica"> Pessoa Jurídica</label>
+                </div>
+                <label for="edit-contato-nome" id="edit-label-nome-contato">Nome / Razão Social:</label>
+                <input type="text" id="edit-contato-nome">
+                <label for="edit-contato-documento" id="edit-label-documento-contato">CPF / CNPJ:</label>
                 <input type="text" id="edit-contato-documento">
+                <label for="edit-contato-telefone">Telefone:</label>
+                <input type="text" id="edit-contato-telefone">
+                <label for="edit-contato-email">E-mail:</label>
+                <input type="email" id="edit-contato-email">
+                <label for="edit-contato-endereco">Endereço:</label>
+                <input type="text" id="edit-contato-endereco">
                 <div class="checkbox-container">
                     <label><input type="checkbox" id="edit-contato-e-cliente"> É Cliente</label>
                     <label><input type="checkbox" id="edit-contato-e-fornecedor"> É Fornecedor</label>
@@ -264,14 +290,11 @@
             </form>
         </div>
     </div>
-
     <div id="modal-ver-nota" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Detalhes da Nota Fiscal</h2>
-            <div id="detalhes-nota-conteudo">
-                <!-- Detalhes serão inseridos aqui pelo JavaScript -->
-            </div>
+            <div id="detalhes-nota-conteudo"></div>
         </div>
     </div>
 

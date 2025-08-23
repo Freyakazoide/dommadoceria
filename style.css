@@ -29,7 +29,7 @@ body {
 /* ---===[ 2. LAYOUT PRINCIPAL COM MENU LATERAL ]===--- */
 .app-container {
     display: grid;
-    grid-template-columns: 260px 1fr; /* Largura do menu | Resto da tela */
+    grid-template-columns: 260px 1fr;
     min-height: 100vh;
 }
 
@@ -43,7 +43,7 @@ body {
 
 .main-content {
     padding: 2rem 3rem;
-    overflow-y: auto; /* Permite rolagem apenas no conteúdo */
+    overflow-y: auto;
 }
 
 .tela.hidden {
@@ -140,40 +140,19 @@ button:hover, button[type="submit"]:hover {
 }
 .btn-secundario:hover { background-color: #5a6268; }
 
-
 /* ---===[ 5. FORMULÁRIOS MODERNOS ]===--- */
 form {
+    margin-bottom: 1.5rem;
+}
+
+.form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 1rem;
-    align-items: flex-end;
 }
 
-form h3 {
-    grid-column: 1 / -1; /* Ocupa todas as colunas */
-    margin: 0 0 0.5rem 0;
-}
-
-form button[type="submit"] {
-    height: 48px; /* Alinha com a altura dos inputs */
-}
-
-.checkbox-container {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
-    height: 48px;
-}
-.checkbox-container label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0;
-    font-weight: 500;
-}
-input[type="checkbox"] {
-    width: auto;
-    accent-color: var(--cor-principal);
+.form-group.full-width {
+    grid-column: 1 / -1;
 }
 
 label {
@@ -208,10 +187,28 @@ select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%2...%3E');
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
     background-repeat: no-repeat;
     background-position: right 1rem top 50%;
     background-size: 0.8rem auto;
+}
+
+.checkbox-container, .tipo-pessoa-container {
+    display: flex;
+    gap: 1.5rem;
+    margin: 1rem 0;
+    align-items: center;
+}
+.checkbox-container label, .tipo-pessoa-container label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-weight: 500;
+}
+input[type="checkbox"], input[type="radio"] {
+    width: auto;
+    accent-color: var(--cor-principal);
 }
 
 /* ---===[ 6. TABELAS ELEGANTES ]===--- */
@@ -306,25 +303,19 @@ select {
 .close-button:hover { color: var(--cor-texto); }
 
 /* ---===[ 8. COMPONENTES ESPECÍFICOS ]===--- */
-.sub-nav {
-    display: flex;
-    gap: 0.5rem;
-    border-bottom: 1px solid var(--cor-borda);
-    margin-bottom: 1.5rem;
-}
-.sub-nav-link {
-    padding: 0.75rem 1.25rem;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-weight: 500;
-    color: var(--cor-texto-suave);
-    border-bottom: 3px solid transparent;
-}
-.sub-nav-link.active {
-    color: var(--cor-principal);
-    border-bottom-color: var(--cor-principal);
-}
+.sub-nav { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--cor-borda); margin-bottom: 1.5rem; }
+.sub-nav-link { padding: 0.75rem 1.25rem; border: none; background: none; cursor: pointer; font-weight: 500; color: var(--cor-texto-suave); border-bottom: 3px solid transparent; font-size: 1rem; font-family: 'Poppins', sans-serif; }
+.sub-nav-link.active { color: var(--cor-principal); border-bottom-color: var(--cor-principal); }
+
+.nota-fiscal-container { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.nota-fiscal-coluna { display: flex; flex-direction: column; }
+#nf-itens-container { background-color: var(--cor-fundo-app); padding: 1rem; border-radius: var(--raio-borda); flex-grow: 1; min-height: 200px; }
+.nf-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--cor-borda); }
+.nf-total { display: flex; justify-content: space-between; align-items: center; font-size: 1.5rem; font-weight: 700; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--cor-texto); }
+
+.status { padding: 0.25rem 0.75rem; border-radius: 1rem; font-weight: 600; font-size: 0.8rem; color: white; }
+.status-pago { background-color: var(--cor-sucesso); }
+.status-pendente { background-color: var(--cor-aviso); color: var(--cor-texto); }
 
 .modal-colunas { display: flex; gap: 2rem; }
 .modal-coluna { flex: 1; }
@@ -340,75 +331,5 @@ select {
 .custo-adicional-item { display: grid; grid-template-columns: 1fr 120px 40px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
 .custo-adicional-item input { margin-bottom: 0; }
 .custo-adicional-item .btn-remover-custo { width: 40px; height: 40px; padding: 0; background-color: var(--cor-perigo); }
-
-
-.sub-nav {
-    display: flex;
-    gap: 0.5rem;
-    border-bottom: 1px solid var(--cor-borda);
-    margin-bottom: 1.5rem;
-}
-.sub-nav-link {
-    padding: 0.75rem 1.25rem;
-    border: none;
-    background: none;
-    cursor: pointer;
-    font-weight: 500;
-    color: var(--cor-texto-suave);
-    border-bottom: 3px solid transparent;
-    font-size: 1rem;
-    font-family: 'Poppins', sans-serif;
-}
-.sub-nav-link.active {
-    color: var(--cor-principal);
-    border-bottom-color: var(--cor-principal);
-}
-
-.nota-fiscal-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-}
-.nota-fiscal-coluna {
-    display: flex;
-    flex-direction: column;
-}
-#nf-itens-container {
-    background-color: var(--cor-fundo-app);
-    padding: 1rem;
-    border-radius: var(--raio-borda);
-    flex-grow: 1;
-    min-height: 200px;
-}
-.nf-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--cor-borda);
-}
-.nf-total {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 2px solid var(--cor-texto);
-}
-
-.status {
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    font-weight: 600;
-    font-size: 0.8rem;
-    color: white;
-}
-.status-pago {
-    background-color: var(--cor-sucesso);
-}
-.status-pendente {
-    background-color: var(--cor-aviso);
-    color: var(--cor-texto);
-}
+#lista-vendas { list-style: none; padding: 0; }
+#lista-vendas li { background-color: #f9f9f9; padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; border-left: 3px solid var(--cor-info); }
