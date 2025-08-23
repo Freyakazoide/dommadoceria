@@ -69,34 +69,31 @@ async function removerIngrediente(receitaItemId) {
     }
 }
 
-async function editarCliente(clienteId) {
-    const modal = document.getElementById('modal-editar-cliente');
-    const { data: cliente, error } = await supabaseClient.from('clientes').select('*').eq('id', clienteId).single();
-    if (error) return alert('Erro ao carregar dados do cliente.');
+async function editarContato(contatoId) {
+    const modal = document.getElementById('modal-editar-contato');
+    const { data: contato, error } = await supabaseClient.from('contatos').select('*').eq('id', contatoId).single();
+    if (error) return alert('Erro ao carregar dados do contato.');
 
-    document.getElementById('edit-cliente-id').value = cliente.id;
-    document.querySelector(`input[name="edit_tipo_pessoa"][value="${cliente.tipo_pessoa}"]`).checked = true;
-    document.getElementById('edit-nome_razao_social').value = cliente.nome_razao_social;
-    document.getElementById('edit-cpf_cnpj').value = cliente.cpf_cnpj;
-    document.getElementById('edit-telefone').value = cliente.telefone;
-    document.getElementById('edit-email').value = cliente.email;
-    document.getElementById('edit-endereco').value = cliente.endereco;
+    document.getElementById('edit-contato-id').value = contato.id;
+    document.getElementById('edit-contato-nome').value = contato.nome_razao_social;
+    document.getElementById('edit-contato-documento').value = contato.cpf_cnpj;
+    document.getElementById('edit-contato-e-cliente').checked = contato.papeis.includes('Cliente');
+    document.getElementById('edit-contato-e-fornecedor').checked = contato.papeis.includes('Fornecedor');
     
-    atualizarLabelsFormularioCliente('edit-');
     modal.style.display = 'block';
 }
 
-async function deletarCliente(id, nome) {
-    if (!confirm(`DELETAR CLIENTE "${nome}"?\n\nIsso não poderá ser desfeito.`)) return;
-    const { error } = await supabaseClient.from('clientes').delete().match({ id: id });
+async function deletarContato(id, nome) {
+    if (!confirm(`DELETAR CONTATO "${nome}"?\n\nIsso não poderá ser desfeito.`)) return;
+    const { error } = await supabaseClient.from('contatos').delete().match({ id: id });
     if (error) {
         if (error.code === '23503') {
             alert(`ERRO: "${nome}" não pode ser deletado pois está associado a uma ou mais notas fiscais.`);
         } else {
-            alert(`Erro ao deletar o cliente "${nome}".`);
+            alert(`Erro ao deletar o contato "${nome}".`);
         }
     } else {
-        alert(`Cliente "${nome}" deletado com sucesso!`);
+        alert(`Contato "${nome}" deletado com sucesso!`);
         document.dispatchEvent(new CustomEvent('dadosAtualizados'));
     }
 }
@@ -149,43 +146,65 @@ function recalcularAnaliseDeCustos() {
     document.getElementById('preco-sugerido-valor').textContent = `R$ ${precoSugerido.toFixed(2)}`;
 }
 
-function atualizarLabelsFormularioCliente(prefixo = '') {
-    const radioName = prefixo ? 'edit_tipo_pessoa' : 'tipo_pessoa';
-    const tipo = document.querySelector(`input[name="${radioName}"]:checked`).value;
-    const labelNome = document.getElementById(`${prefixo}label-nome`);
-    const labelDocumento = document.getElementById(`${prefixo}label-documento`);
-    const inputNome = document.getElementById(`${prefixo}nome_razao_social`);
-    const inputDocumento = document.getElementById(`${prefixo}cpf_cnpj`);
+async function verDetalhesNota(notaId) {
+    const modal = document.getElementById('modal-ver-nota');
+    const container = document.getElementById('detalhes-nota-conteudo');
+    container.innerHTML = '<p>Carregando...</p>';
+    modal.style.display = 'block';
 
-    if (tipo === 'Física') {
-        labelNome.textContent = 'Nome Completo';
-        inputNome.placeholder = 'Nome do cliente';
-        labelDocumento.textContent = 'CPF';
-        inputDocumento.placeholder = '___.___.___-__';
-    } else {
-        labelNome.textContent = 'Razão Social';
-        inputNome.placeholder = 'Nome da empresa';
-        labelDocumento.textContent = 'CNPJ';
-        inputDocumento.placeholder = '__.___.___/____-__';
-    }
+    const { data: nota, error } = await supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`).eq('id', notaId).single();
+    if (error) { container.innerHTML = '<p>Erro ao carregar detalhes.</p>'; return; }
+
+    const { data: itens, errorItens } = await supabaseClient.from('nota_fiscal_itens').select(`*, produtos(nome)`).eq('nota_fiscal_id', notaId);
+    if (errorItens) { container.innerHTML = '<p>Erro ao carregar itens da nota.</p>'; return; }
+
+    let html = `
+        <p><strong>Cliente:</strong> ${nota.contatos.nome_razao_social}</p>
+        <p><strong>Data:</strong> ${new Date(nota.created_at).toLocaleDateString('pt-BR')}</p>
+        <p><strong>Status:</strong> ${nota.status_pagamento}</p>
+        <p><strong>Método:</strong> ${nota.metodo_pagamento}</p>
+        <hr>
+        <h4>Itens:</h4>
+        <ul>
+    `;
+    itens.forEach(item => {
+        html += `<li>${item.quantidade}x ${item.produtos.nome} - R$ ${Number(item.preco_unitario_momento).toFixed(2)} (un)</li>`;
+    });
+    html += `</ul><hr><p class="linha-custo total"><strong>TOTAL: R$ ${Number(nota.valor_total).toFixed(2)}</strong></p>`;
+    container.innerHTML = html;
+}
+
+async function marcarComoPago(notaId) {
+    if (!confirm('Deseja marcar esta nota como PAGA?')) return;
+    const { error } = await supabaseClient.from('notas_fiscais').update({ status_pagamento: 'Pago' }).match({ id: notaId });
+    if (error) { alert('Erro ao atualizar status.'); }
+    else { document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+}
+
+async function deletarNota(notaId) {
+    if (!confirm('TEM CERTEZA QUE QUER DELETAR ESTA NOTA FISCAL?\nEsta ação não pode ser desfeita.')) return;
+    await supabaseClient.from('nota_fiscal_itens').delete().match({ nota_fiscal_id: notaId });
+    const { error } = await supabaseClient.from('notas_fiscais').delete().match({ id: notaId });
+    if (error) { alert('Erro ao deletar a nota fiscal.'); }
+    else { alert('Nota fiscal deletada com sucesso.'); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     
     let insumosData = [];
     let produtosData = [];
-    let clientesData = [];
+    let contatosData = [];
     let nfItens = [];
 
-    const navButtons = document.querySelectorAll('nav button');
-    const telas = document.querySelectorAll('main .tela');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const telas = document.querySelectorAll('.main-content .tela');
     const modals = document.querySelectorAll('.modal');
     const formInsumos = document.getElementById('form-insumos');
     const formEditarInsumo = document.getElementById('form-editar-insumo');
     const formProdutos = document.getElementById('form-produtos');
     const formAdicionarIngrediente = document.getElementById('form-adicionar-ingrediente');
-    const formClientes = document.getElementById('form-clientes');
-    const formEditarCliente = document.getElementById('form-editar-cliente');
+    const formContatos = document.getElementById('form-contatos');
+    const formEditarContato = document.getElementById('form-editar-contato');
     const formAddNfItem = document.getElementById('form-add-nf-item');
     const btnSalvarNf = document.getElementById('btn-salvar-nf');
 
@@ -193,9 +212,21 @@ document.addEventListener('DOMContentLoaded', () => {
         telas.forEach(tela => tela.classList.add('hidden'));
         const telaAlvo = document.getElementById(targetId);
         if (telaAlvo) telaAlvo.classList.remove('hidden');
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.dataset.target === targetId) {
+                link.classList.add('active');
+            }
+        });
     }
 
-    navButtons.forEach(button => button.addEventListener('click', () => mostrarTela(button.getAttribute('data-target'))));
+    navLinks.forEach(link => {
+        link.addEventListener('click', (event) => {
+            event.preventDefault();
+            mostrarTela(link.dataset.target);
+        });
+    });
     
     modals.forEach(modal => {
         const closeButton = modal.querySelector('.close-button');
@@ -208,6 +239,15 @@ document.addEventListener('DOMContentLoaded', () => {
             event.target.style.display = 'none';
         }
     };
+
+    document.querySelectorAll('.sub-nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            document.querySelectorAll('.sub-nav-link').forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            document.querySelectorAll('.subtela').forEach(s => s.classList.add('hidden'));
+            document.getElementById(link.dataset.target).classList.remove('hidden');
+        });
+    });
 
     function renderizarTabelaInsumos() {
         const corpoTabela = document.getElementById('corpo-tabela-insumos');
@@ -312,64 +352,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function renderizarTabelaClientes() {
-        const corpoTabela = document.getElementById('corpo-tabela-clientes');
+    function renderizarTabelaContatos() {
+        const corpoTabela = document.getElementById('corpo-tabela-contatos');
         corpoTabela.innerHTML = '';
-        if (clientesData.length === 0) {
-            corpoTabela.innerHTML = '<tr><td colspan="4">Nenhum cliente cadastrado.</td></tr>';
+        if (contatosData.length === 0) {
+            corpoTabela.innerHTML = '<tr><td colspan="3">Nenhum contato cadastrado.</td></tr>';
             return;
         }
-        clientesData.forEach(cliente => {
+        contatosData.forEach(contato => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${cliente.nome_razao_social}</td>
-                <td>${cliente.cpf_cnpj}</td>
-                <td>${cliente.telefone || 'N/A'}</td>
+                <td>${contato.nome_razao_social}</td>
+                <td>${(contato.papeis || []).join(', ')}</td>
                 <td class="actions-container">
-                    <button class="btn-acao btn-warning" onclick="editarCliente(${cliente.id})">✏️</button>
-                    <button class="btn-acao btn-danger" onclick="deletarCliente(${cliente.id}, '${cliente.nome_razao_social}')">🗑️</button>
+                    <button class="btn-acao btn-warning" onclick="editarContato(${contato.id})">✏️</button>
+                    <button class="btn-acao btn-danger" onclick="deletarContato(${contato.id}, '${contato.nome_razao_social}')">🗑️</button>
                 </td>
             `;
             corpoTabela.appendChild(tr);
         });
     }
 
-    document.querySelectorAll('input[name="tipo_pessoa"]').forEach(radio => {
-        radio.addEventListener('change', () => atualizarLabelsFormularioCliente());
-    });
-    document.querySelectorAll('input[name="edit_tipo_pessoa"]').forEach(radio => {
-        radio.addEventListener('change', () => atualizarLabelsFormularioCliente('edit-'));
+    formContatos.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const papeis = [];
+        if (document.getElementById('contato-e-cliente').checked) papeis.push('Cliente');
+        if (document.getElementById('contato-e-fornecedor').checked) papeis.push('Fornecedor');
+
+        const contato = {
+            nome_razao_social: document.getElementById('contato-nome').value,
+            cpf_cnpj: document.getElementById('contato-documento').value,
+            papeis: papeis
+        };
+        const { error } = await supabaseClient.from('contatos').insert([contato]);
+        if (error) { alert('Erro ao salvar contato.'); console.error(error); } 
+        else { alert('Contato salvo com sucesso!'); formContatos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
-    formClientes.addEventListener('submit', async (event) => {
+    formEditarContato.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const cliente = {
-            tipo_pessoa: document.querySelector('input[name="tipo_pessoa"]:checked').value,
-            nome_razao_social: document.getElementById('nome_razao_social').value,
-            cpf_cnpj: document.getElementById('cpf_cnpj').value,
-            telefone: document.getElementById('telefone').value,
-            email: document.getElementById('email').value,
-            endereco: document.getElementById('endereco').value,
-        };
-        const { error } = await supabaseClient.from('clientes').insert([cliente]);
-        if (error) { alert('Erro ao salvar cliente.'); console.error(error); } 
-        else { alert('Cliente salvo com sucesso!'); formClientes.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
-    });
+        const id = document.getElementById('edit-contato-id').value;
+        const papeis = [];
+        if (document.getElementById('edit-contato-e-cliente').checked) papeis.push('Cliente');
+        if (document.getElementById('edit-contato-e-fornecedor').checked) papeis.push('Fornecedor');
 
-    formEditarCliente.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const id = document.getElementById('edit-cliente-id').value;
-        const cliente = {
-            tipo_pessoa: document.querySelector('input[name="edit_tipo_pessoa"]:checked').value,
-            nome_razao_social: document.getElementById('edit-nome_razao_social').value,
-            cpf_cnpj: document.getElementById('edit-cpf_cnpj').value,
-            telefone: document.getElementById('edit-telefone').value,
-            email: document.getElementById('edit-email').value,
-            endereco: document.getElementById('edit-endereco').value,
+        const contato = {
+            nome_razao_social: document.getElementById('edit-contato-nome').value,
+            cpf_cnpj: document.getElementById('edit-contato-documento').value,
+            papeis: papeis
         };
-        const { error } = await supabaseClient.from('clientes').update(cliente).match({ id });
-        if (error) { alert('Erro ao atualizar cliente.'); } 
-        else { alert('Cliente atualizado com sucesso!'); document.getElementById('modal-editar-cliente').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+        const { error } = await supabaseClient.from('contatos').update(contato).match({ id });
+        if (error) { alert('Erro ao atualizar contato.'); } 
+        else { alert('Contato atualizado com sucesso!'); document.getElementById('modal-editar-contato').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
     function renderizarItensNf() {
@@ -429,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
             metodo_pagamento: document.getElementById('nf-metodo-pagamento').value
         }]).select().single();
 
-        if (error) return alert('Erro ao salvar a nota fiscal.');
+        if (error) { console.error(error); return alert('Erro ao salvar a nota fiscal.'); }
 
         const itensParaSalvar = nfItens.map(item => ({
             nota_fiscal_id: notaFiscal.id,
@@ -451,8 +485,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function renderizarTabelaNotasFiscais() {
-        const { data, error } = await supabaseClient.from('notas_fiscais').select(`*, clientes(nome_razao_social)`).order('created_at', { ascending: false });
-        const corpoTabela = document.getElementById('corpo-tabela-notas-fiscais');
+        const { data, error } = await supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`).order('created_at', { ascending: false });
+        const corpoTabela = document.getElementById('corpo-tabela-notas-saida');
         corpoTabela.innerHTML = '';
         if (!data || data.length === 0) {
             corpoTabela.innerHTML = '<tr><td colspan="5">Nenhuma nota fiscal emitida.</td></tr>';
@@ -463,56 +497,51 @@ document.addEventListener('DOMContentLoaded', () => {
             const statusClass = nf.status_pagamento === 'Pago' ? 'status-pago' : 'status-pendente';
             tr.innerHTML = `
                 <td>${new Date(nf.created_at).toLocaleDateString('pt-BR')}</td>
-                <td>${nf.clientes.nome_razao_social}</td>
+                <td>${nf.contatos.nome_razao_social}</td>
                 <td>R$ ${Number(nf.valor_total).toFixed(2)}</td>
                 <td><span class="status ${statusClass}">${nf.status_pagamento}</span></td>
                 <td class="actions-container">
-                    <button class="btn-acao btn-info" title="Ver Detalhes">👁️</button>
-                    <button class="btn-acao btn-success" title="Marcar como Pago" onclick="marcarComoPago(${nf.id})">✔️</button>
+                    <button class="btn-acao btn-info" title="Ver Detalhes" onclick="verDetalhesNota(${nf.id})">👁️</button>
+                    ${nf.status_pagamento !== 'Pago' ? `<button class="btn-acao btn-success" title="Marcar como Pago" onclick="marcarComoPago(${nf.id})">✔️</button>` : ''}
+                    <button class="btn-acao btn-danger" title="Deletar Nota" onclick="deletarNota(${nf.id})">🗑️</button>
                 </td>
             `;
             corpoTabela.appendChild(tr);
         });
     }
 
-    window.marcarComoPago = async function(nfId) {
-        const { error } = await supabaseClient.from('notas_fiscais').update({ status_pagamento: 'Pago' }).match({ id: nfId });
-        if (error) { alert('Erro ao atualizar status.'); }
-        else { document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
-    }
-    
     async function atualizarTodosOsDados() {
-        const [insumosResult, produtosResult, clientesResult] = await Promise.all([
+        const [insumosResult, produtosResult, contatosResult] = await Promise.all([
             supabaseClient.from('insumos').select('*').order('nome'),
             supabaseClient.from('produtos').select('*').order('nome'),
-            supabaseClient.from('clientes').select('*').order('nome_razao_social')
+            supabaseClient.from('contatos').select('*').order('nome_razao_social')
         ]);
         
         insumosData = insumosResult.data || [];
         produtosData = produtosResult.data || [];
-        clientesData = clientesResult.data || [];
+        contatosData = contatosResult.data || [];
         
         renderizarTabelaInsumos();
         renderizarTabelaProdutos();
-        renderizarTabelaClientes();
+        renderizarTabelaContatos();
         
         const selectInsumo = document.getElementById('select-insumo-receita');
-        const selectProdutoVenda = document.getElementById('nf-produto');
-        const selectClienteVenda = document.getElementById('nf-cliente');
+        const selectProdutoNf = document.getElementById('nf-produto');
+        const selectClienteNf = document.getElementById('nf-cliente');
         
         selectInsumo.innerHTML = '<option value="">Selecione...</option>';
-        selectProdutoVenda.innerHTML = '<option value="">Selecione...</option>';
-        selectClienteVenda.innerHTML = '<option value="">Selecione...</option>';
+        selectProdutoNf.innerHTML = '<option value="">Selecione...</option>';
+        selectClienteNf.innerHTML = '<option value="">Selecione...</option>';
         
         insumosData.forEach(i => selectInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`);
-        produtosData.forEach(p => selectProdutoVenda.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${p.preco_venda ? Number(p.preco_venda).toFixed(2) : '?.??'}</option>`);
-        clientesData.forEach(c => selectClienteVenda.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
+        produtosData.filter(p => p.preco_venda > 0).forEach(p => selectProdutoNf.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`);
+        contatosData.filter(c => c.papeis.includes('Cliente')).forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
         
         await renderizarTabelaNotasFiscais();
     }
     
     document.addEventListener('dadosAtualizados', atualizarTodosOsDados);
     
-    mostrarTela('tela-insumos');
+    mostrarTela('tela-dashboard');
     atualizarTodosOsDados();
 });

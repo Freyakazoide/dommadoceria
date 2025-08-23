@@ -4,8 +4,9 @@
 :root {
     --cor-principal: #d63384;
     --cor-principal-hover: #b02a6c;
-    --cor-fundo: #f8f9fa;
-    --cor-superficie: #ffffff;
+    --cor-fundo-app: #f8f9fa;
+    --cor-fundo-sidebar: #ffffff;
+    --cor-fundo-conteudo: #ffffff;
     --cor-texto: #212529;
     --cor-texto-suave: #6c757d;
     --cor-borda: #dee2e6;
@@ -19,27 +20,35 @@
 }
 
 body {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    background-color: var(--cor-fundo);
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--cor-fundo-app);
     color: var(--cor-texto);
     margin: 0;
-    padding: 2rem;
-    box-sizing: border-box;
 }
 
-/* ---===[ 2. LAYOUT PRINCIPAL ]===--- */
-main {
-    width: 100%;
-    max-width: 90vw;
-    margin: 0 auto;
-    background-color: var(--cor-superficie);
+/* ---===[ 2. LAYOUT PRINCIPAL COM MENU LATERAL ]===--- */
+.app-container {
+    display: grid;
+    grid-template-columns: 260px 1fr; /* Largura do menu | Resto da tela */
+    min-height: 100vh;
+}
+
+.sidebar-menu {
+    background-color: var(--cor-fundo-sidebar);
+    padding: 1.5rem;
+    border-right: 1px solid var(--cor-borda);
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
     padding: 2rem 3rem;
-    border-radius: var(--raio-borda);
-    box-shadow: var(--sombra-media);
-    box-sizing: border-box;
+    overflow-y: auto; /* Permite rolagem apenas no conteúdo */
 }
 
-.hidden { display: none; }
+.tela.hidden {
+    display: none;
+}
 
 hr {
     border: none;
@@ -47,36 +56,59 @@ hr {
     margin: 2rem 0;
 }
 
-/* ---===[ 3. CABEÇALHO E NAVEGAÇÃO ]===--- */
-header {
+/* ---===[ 3. MENU LATERAL (SIDEBAR) ]===--- */
+.sidebar-header {
     text-align: center;
     margin-bottom: 2.5rem;
 }
 
-.logo {
-    max-width: 120px;
-    height: auto;
-    margin: 0 auto 1rem;
+.sidebar-header .logo {
+    max-width: 80px;
+    margin-bottom: 0.5rem;
 }
 
-header h1 {
-    color: var(--cor-principal);
-    margin: 0 0 0.5rem 0;
-    font-weight: 700;
-}
-
-header p {
+.sidebar-header h2 {
     margin: 0;
-    color: var(--cor-texto-suave);
-    font-size: 1.1rem;
+    font-size: 1.25rem;
+    color: var(--cor-principal);
 }
 
-nav {
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav .nav-section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--cor-texto-suave);
+    text-transform: uppercase;
+    padding: 1.5rem 0.5rem 0.5rem;
+    letter-spacing: 1px;
+}
+
+.sidebar-nav .nav-link {
     display: flex;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 2.5rem;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--raio-borda);
+    text-decoration: none;
+    color: var(--cor-texto-suave);
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.sidebar-nav .nav-link:hover {
+    background-color: #f1f1f1;
+    color: var(--cor-texto);
+}
+
+.sidebar-nav .nav-link.active {
+    background-color: var(--cor-principal);
+    color: white;
+    box-shadow: var(--sombra-suave);
 }
 
 /* ---===[ 4. ESTILO GERAL DE BOTÕES ]===--- */
@@ -95,41 +127,53 @@ button, button[type="submit"] {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    width: 100%;
-    box-sizing: border-box;
 }
 
 button:hover, button[type="submit"]:hover {
     background-color: var(--cor-principal-hover);
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--sombra-media);
-}
-
-nav button {
-    background-color: var(--cor-superficie);
-    color: var(--cor-principal);
-    border: 2px solid var(--cor-principal);
-    width: auto;
-}
-
-nav button:hover {
-    background-color: var(--cor-principal);
-    color: white;
 }
 
 .btn-secundario {
     background-color: var(--cor-texto-suave);
-    color: white;
-    width: auto;
 }
 .btn-secundario:hover { background-color: #5a6268; }
 
+
 /* ---===[ 5. FORMULÁRIOS MODERNOS ]===--- */
 form {
-    background-color: transparent;
-    padding: 0;
-    border: none;
-    margin-bottom: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+form h3 {
+    grid-column: 1 / -1; /* Ocupa todas as colunas */
+    margin: 0 0 0.5rem 0;
+}
+
+form button[type="submit"] {
+    height: 48px; /* Alinha com a altura dos inputs */
+}
+
+.checkbox-container {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    height: 48px;
+}
+.checkbox-container label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-weight: 500;
+}
+input[type="checkbox"] {
+    width: auto;
+    accent-color: var(--cor-principal);
 }
 
 label {
@@ -141,7 +185,7 @@ label {
 
 input[type="text"],
 input[type="number"],
-input[type="email"], /* ADICIONADO AQUI */
+input[type="email"],
 select {
     width: 100%;
     padding: 0.75rem;
@@ -150,14 +194,11 @@ select {
     border-radius: var(--raio-borda);
     border: 1px solid var(--cor-borda);
     box-sizing: border-box;
-    margin-bottom: 1rem;
     transition: all 0.2s ease-in-out;
+    height: 48px;
 }
 
-input[type="text"]:focus,
-input[type="number"]:focus,
-input[type="email"]:focus, /* ADICIONADO AQUI */
-select:focus {
+input:focus, select:focus {
     border-color: var(--cor-principal);
     outline: none;
     box-shadow: 0 0 0 3px rgba(214, 51, 132, 0.2);
@@ -167,7 +208,7 @@ select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%2...%3E');
     background-repeat: no-repeat;
     background-position: right 1rem top 50%;
     background-size: 0.8rem auto;
@@ -200,13 +241,10 @@ select {
     border-bottom: 1px solid #f0f0f0;
     transition: background-color 0.2s ease-in-out;
 }
-
 .tabela-bonita tbody tr:last-of-type {
     border-bottom: 3px solid var(--cor-principal);
 }
 .tabela-bonita tbody tr:hover { background-color: #f1f1f1; }
-.tabela-bonita thead th[data-column] { cursor: pointer; }
-.sort-indicator { margin-left: 0.5rem; opacity: 0.8; }
 
 .actions-container {
     display: flex;
@@ -267,25 +305,25 @@ select {
 }
 .close-button:hover { color: var(--cor-texto); }
 
-/* ---===[ 8. ESTILOS ESPECÍFICOS ]===--- */
-.tipo-pessoa-container {
+/* ---===[ 8. COMPONENTES ESPECÍFICOS ]===--- */
+.sub-nav {
     display: flex;
-    gap: 1.5rem;
-    margin-bottom: 1rem;
-    background-color: #f0f0f0;
-    padding: 0.5rem;
-    border-radius: var(--raio-borda);
-}
-.tipo-pessoa-container label {
-    display: flex;
-    align-items: center;
     gap: 0.5rem;
-    margin: 0;
-    font-weight: 500;
+    border-bottom: 1px solid var(--cor-borda);
+    margin-bottom: 1.5rem;
 }
-input[type="radio"] {
-    width: auto;
-    accent-color: var(--cor-principal);
+.sub-nav-link {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--cor-texto-suave);
+    border-bottom: 3px solid transparent;
+}
+.sub-nav-link.active {
+    color: var(--cor-principal);
+    border-bottom-color: var(--cor-principal);
 }
 
 .modal-colunas { display: flex; gap: 2rem; }
@@ -302,5 +340,3 @@ input[type="radio"] {
 .custo-adicional-item { display: grid; grid-template-columns: 1fr 120px 40px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
 .custo-adicional-item input { margin-bottom: 0; }
 .custo-adicional-item .btn-remover-custo { width: 40px; height: 40px; padding: 0; background-color: var(--cor-perigo); }
-#lista-vendas { list-style: none; padding: 0; }
-#lista-vendas li { background-color: #f9f9f9; padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; border-left: 3px solid var(--cor-info); }

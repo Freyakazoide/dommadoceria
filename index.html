@@ -3,173 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Domma Doceria - Gestão Simples</title>
+    <title>Domma Doceria - Gestão</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <header>
-        <img src="domma.png" alt="Logo da Domma Doceria" class="logo">
-        <h1>Domma Doceria</h1>
-        <p>Seu assistente de gestão de doces</p>
-    </header>
-
-    <nav>
-        <button data-target="tela-insumos">Insumos</button>
-        <button data-target="tela-produtos">Produtos</button>
-        <button data-target="tela-clientes">Clientes</button>
-        <button data-target="tela-notas-fiscais">Criar Nota Fiscal</button>
-    </nav>
-
-    <main>
-        <!-- TELA DE INSUMOS -->
-        <section id="tela-insumos" class="tela">
-            <h2>Estoque de Insumos</h2>
-            <form id="form-insumos">
-                <h3>Adicionar Novo Insumo</h3>
-                <input type="text" id="nome-insumo" placeholder="Nome do insumo" required>
-                <input type="text" id="unidade-medida" placeholder="Unidade (ex: kg, g, un)" required>
-                <input type="number" id="preco-unitario" placeholder="Preço unitário (ex: 4.50)" step="0.01" required>
-                <button type="submit">Salvar Insumo</button>
-            </form>
-            <hr>
-            <h3>Insumos Cadastrados</h3>
-            <table class="tabela-bonita">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Unidade</th>
-                        <th>Preço</th>
-                        <th style="text-align: right;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="corpo-tabela-insumos"></tbody>
-            </table>
-        </section>
-
-        <!-- TELA DE PRODUTOS -->
-        <section id="tela-produtos" class="tela hidden">
-            <h2>Meus Produtos</h2>
-            <form id="form-produtos">
-                <h3>Cadastrar Novo Produto</h3>
-                <input type="text" id="nome-produto" placeholder="Nome do produto (ex: Bolo de Cenoura)" required>
-                <button type="submit">Salvar Produto</button>
-            </form>
-            <hr>
-            <h3>Produtos Cadastrados</h3>
-            <table class="tabela-bonita">
-                <thead>
-                    <tr>
-                        <th>Nome do Produto</th>
-                        <th>Preço de Venda</th>
-                        <th style="text-align: right;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="corpo-tabela-produtos"></tbody>
-            </table>
-        </section>
-        
-        <!-- TELA DE CLIENTES -->
-        <section id="tela-clientes" class="tela hidden">
-            <h2>Cadastro de Clientes</h2>
-            <form id="form-clientes">
-                <h3>Adicionar Novo Cliente</h3>
-                <div class="tipo-pessoa-container">
-                    <label><input type="radio" name="tipo_pessoa" value="Física" checked> Pessoa Física</label>
-                    <label><input type="radio" name="tipo_pessoa" value="Jurídica"> Pessoa Jurídica</label>
-                </div>
-                
-                <label for="nome_razao_social" id="label-nome">Nome Completo</label>
-                <input type="text" id="nome_razao_social" placeholder="Nome do cliente">
-                
-                <label for="cpf_cnpj" id="label-documento">CPF</label>
-                <input type="text" id="cpf_cnpj" placeholder="___.___.___-__">
-                
-                <label for="telefone">Telefone</label>
-                <input type="text" id="telefone" placeholder="(  ) _____-____">
-                
-                <label for="email">E-mail</label>
-                <input type="email" id="email" placeholder="email@exemplo.com">
-                
-                <label for="endereco">Endereço</label>
-                <input type="text" id="endereco" placeholder="Rua, Número, Bairro, Cidade">
-                
-                <button type="submit">Salvar Cliente</button>
-            </form>
-            <hr>
-            <h3>Clientes Cadastrados</h3>
-            <table class="tabela-bonita">
-                <thead>
-                    <tr>
-                        <th>Nome / Razão Social</th>
-                        <th>CPF / CNPJ</th>
-                        <th>Contato</th>
-                        <th style="text-align: right;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="corpo-tabela-clientes"></tbody>
-            </table>
-        </section>
-
-        <!-- TELA DE NOTAS FISCAIS -->
-        <section id="tela-notas-fiscais" class="tela hidden">
-            <h2>Emitir Nota Fiscal (Controle Interno)</h2>
-            <div class="nota-fiscal-container">
-                <div class="nota-fiscal-coluna">
-                    <h3>1. Dados da Nota</h3>
-                    <label for="nf-cliente">Cliente:</label>
-                    <select id="nf-cliente"></select>
-                    <label for="nf-metodo-pagamento">Método de Pagamento:</label>
-                    <select id="nf-metodo-pagamento">
-                        <option>Pix</option>
-                        <option>Dinheiro</option>
-                        <option>Cartão de Débito</option>
-                        <option>Cartão de Crédito</option>
-                    </select>
-                    <label for="nf-status-pagamento">Status do Pagamento:</label>
-                    <select id="nf-status-pagamento">
-                        <option>Pago</option>
-                        <option>Pendente</option>
-                    </select>
-                    <hr>
-                    <h3>2. Adicionar Produtos</h3>
-                    <form id="form-add-nf-item">
-                        <label for="nf-produto">Produto:</label>
-                        <select id="nf-produto"></select>
-                        <label for="nf-quantidade">Quantidade:</label>
-                        <input type="number" id="nf-quantidade" value="1" step="1" min="1">
-                        <button type="submit" class="btn-secundario">+ Adicionar Produto</button>
-                    </form>
-                </div>
-                <div class="nota-fiscal-coluna">
-                    <h3>Itens da Nota</h3>
-                    <div id="nf-itens-container">
-                        <p class="placeholder">Adicione produtos à nota...</p>
-                    </div>
-                    <div class="nf-total">
-                        <span>TOTAL:</span>
-                        <strong id="nf-valor-total">R$ 0.00</strong>
-                    </div>
-                    <button id="btn-salvar-nf">💾 Salvar Nota Fiscal</button>
-                </div>
+    <div class="app-container">
+        <!-- MENU LATERAL -->
+        <aside class="sidebar-menu">
+            <div class="sidebar-header">
+                <img src="domma.png" alt="Logo da Domma Doceria" class="logo">
+                <h2>Domma Doceria</h2>
             </div>
-            <hr>
-            <h3>Histórico de Notas Fiscais</h3>
-            <table class="tabela-bonita">
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Cliente</th>
-                        <th>Valor Total</th>
-                        <th>Status</th>
-                        <th style="text-align: right;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="corpo-tabela-notas-fiscais"></tbody>
-            </table>
-        </section>
-    </main>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#" class="nav-link active" data-target="tela-dashboard">📊 Dashboard</a></li>
+                    <li class="nav-section-title">CADASTROS</li>
+                    <li><a href="#" class="nav-link" data-target="tela-produtos">🍰 Produtos</a></li>
+                    <li><a href="#" class="nav-link" data-target="tela-insumos">📦 Insumos</a></li>
+                    <li><a href="#" class="nav-link" data-target="tela-contatos">👥 Contatos</a></li>
+                    <li class="nav-section-title">MOVIMENTAÇÕES</li>
+                    <li><a href="#" class="nav-link" data-target="tela-notas-saida">💸 Notas de Saída (Vendas)</a></li>
+                    <li><a href="#" class="nav-link" data-target="tela-notas-entrada">📥 Notas de Entrada (Compras)</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="main-content">
+            <section id="tela-dashboard" class="tela">
+                <h2>Dashboard</h2>
+                <p>Em breve, aqui você verá um resumo do seu negócio!</p>
+            </section>
+            
+            <section id="tela-produtos" class="tela hidden">
+                <h2>Meus Produtos</h2>
+                <form id="form-produtos">
+                    <input type="text" id="nome-produto" placeholder="Nome do novo produto" required>
+                    <button type="submit">Adicionar Produto</button>
+                </form>
+                <hr>
+                <table class="tabela-bonita">
+                    <thead>
+                        <tr>
+                            <th>Nome do Produto</th>
+                            <th>Preço de Venda</th>
+                            <th style="text-align: right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-produtos"></tbody>
+                </table>
+            </section>
+
+            <section id="tela-insumos" class="tela hidden">
+                <h2>Estoque de Insumos</h2>
+                <form id="form-insumos">
+                    <input type="text" id="nome-insumo" placeholder="Nome do insumo" required>
+                    <input type="text" id="unidade-medida" placeholder="Unidade (kg, g, un)" required>
+                    <input type="number" id="preco-unitario" placeholder="Preço unitário" step="0.01" required>
+                    <button type="submit">Adicionar Insumo</button>
+                </form>
+                <hr>
+                <table class="tabela-bonita">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Unidade</th>
+                            <th>Preço</th>
+                            <th style="text-align: right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-insumos"></tbody>
+                </table>
+            </section>
+
+            <section id="tela-contatos" class="tela hidden">
+                <h2>Contatos (Clientes e Fornecedores)</h2>
+                <form id="form-contatos">
+                    <input type="text" id="contato-nome" placeholder="Nome / Razão Social" required>
+                    <input type="text" id="contato-documento" placeholder="CPF / CNPJ">
+                    <div class="checkbox-container">
+                        <label><input type="checkbox" id="contato-e-cliente" checked> É Cliente</label>
+                        <label><input type="checkbox" id="contato-e-fornecedor"> É Fornecedor</label>
+                    </div>
+                    <button type="submit">Adicionar Contato</button>
+                </form>
+                <hr>
+                <table class="tabela-bonita">
+                    <thead>
+                        <tr>
+                            <th>Nome / Razão Social</th>
+                            <th>Papel</th>
+                            <th style="text-align: right;">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-contatos"></tbody>
+                </table>
+            </section>
+
+            <!-- TELA DE NOTAS DE SAÍDA (VENDAS) -->
+            <section id="tela-notas-saida" class="tela hidden">
+                <h2>Notas de Saída (Vendas)</h2>
+                <div class="sub-nav">
+                    <button class="sub-nav-link active" data-target="subtela-nova-saida">Nova Nota de Saída</button>
+                    <button class="sub-nav-link" data-target="subtela-historico-saida">Histórico</button>
+                </div>
+
+                <!-- SUBTELA: CRIAR NOVA NOTA -->
+                <div id="subtela-nova-saida" class="subtela">
+                    <div class="nota-fiscal-container">
+                        <div class="nota-fiscal-coluna">
+                            <h3>1. Dados da Nota</h3>
+                            <label for="nf-cliente">Cliente:</label>
+                            <select id="nf-cliente" required></select>
+
+                            <label for="nf-metodo-pagamento">Método de Pagamento:</label>
+                            <select id="nf-metodo-pagamento">
+                                <option>Pix</option>
+                                <option>Dinheiro</option>
+                                <option>Cartão de Débito</option>
+                                <option>Cartão de Crédito</option>
+                            </select>
+
+                            <label for="nf-status-pagamento">Status do Pagamento:</label>
+                            <select id="nf-status-pagamento">
+                                <option>Pago</option>
+                                <option>Pendente</option>
+                            </select>
+                            <hr>
+                            <h3>2. Adicionar Produtos</h3>
+                            <form id="form-add-nf-item">
+                                <label for="nf-produto">Produto:</label>
+                                <select id="nf-produto" required></select>
+                                <label for="nf-quantidade">Quantidade:</label>
+                                <input type="number" id="nf-quantidade" value="1" step="1" min="1" required>
+                                <button type="submit" class="btn-secundario">+ Adicionar Produto</button>
+                            </form>
+                        </div>
+                        <div class="nota-fiscal-coluna">
+                            <h3>Itens da Nota</h3>
+                            <div id="nf-itens-container">
+                                <p class="placeholder">Adicione produtos à nota...</p>
+                            </div>
+                            <div class="nf-total">
+                                <span>TOTAL:</span>
+                                <strong id="nf-valor-total">R$ 0.00</strong>
+                            </div>
+                            <button id="btn-salvar-nf">💾 Salvar Nota Fiscal</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUBTELA: HISTÓRICO DE NOTAS -->
+                <div id="subtela-historico-saida" class="subtela hidden">
+                    <table class="tabela-bonita">
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Cliente</th>
+                                <th>Valor</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="corpo-tabela-notas-saida"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="tela-notas-entrada" class="tela hidden">
+                <h2>Notas de Entrada (Compras)</h2>
+                <p>Em breve: registre suas compras de insumos para controlar o estoque.</p>
+            </section>
+        </main>
+    </div>
 
     <!-- MODAIS -->
     <div id="modal-editar-insumo" class="modal">
@@ -179,15 +187,16 @@
             <form id="form-editar-insumo">
                 <input type="hidden" id="edit-insumo-id">
                 <label for="edit-nome-insumo">Nome do Insumo:</label>
-                <input type="text" id="edit-nome-insumo">
+                <input type="text" id="edit-nome-insumo" required>
                 <label for="edit-unidade-medida">Unidade de Medida:</label>
-                <input type="text" id="edit-unidade-medida">
+                <input type="text" id="edit-unidade-medida" required>
                 <label for="edit-preco-unitario">Preço Unitário (R$):</label>
-                <input type="number" id="edit-preco-unitario" step="0.01">
+                <input type="number" id="edit-preco-unitario" step="0.01" required>
                 <button type="submit">Salvar Alterações</button>
             </form>
         </div>
     </div>
+
     <div id="modal-gerenciar-produto" class="modal modal-grande">
         <div class="modal-content">
             <span class="close-button">&times;</span>
@@ -198,9 +207,9 @@
                     <h3><span class="emoji-titulo">🥣</span>Ingredientes</h3>
                     <form id="form-adicionar-ingrediente">
                         <label for="select-insumo-receita">Adicionar Insumo:</label>
-                        <select id="select-insumo-receita"></select>
+                        <select id="select-insumo-receita" required></select>
                         <label for="quantidade-ingrediente">Quantidade:</label>
-                        <input type="number" id="quantidade-ingrediente" placeholder="Ex: 0.5" step="0.01">
+                        <input type="number" id="quantidade-ingrediente" placeholder="Ex: 0.5" step="0.01" required>
                         <button type="submit">+ Adicionar</button>
                     </form>
                     <hr>
@@ -236,28 +245,33 @@
             </div>
         </div>
     </div>
-    <div id="modal-editar-cliente" class="modal">
+
+    <div id="modal-editar-contato" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2>Editar Cliente</h2>
-            <form id="form-editar-cliente">
-                <input type="hidden" id="edit-cliente-id">
-                <div class="tipo-pessoa-container">
-                    <label><input type="radio" name="edit_tipo_pessoa" value="Física"> Pessoa Física</label>
-                    <label><input type="radio" name="edit_tipo_pessoa" value="Jurídica"> Pessoa Jurídica</label>
+            <h2>Editar Contato</h2>
+            <form id="form-editar-contato">
+                <input type="hidden" id="edit-contato-id">
+                <label for="edit-contato-nome">Nome / Razão Social:</label>
+                <input type="text" id="edit-contato-nome" required>
+                <label for="edit-contato-documento">CPF / CNPJ:</label>
+                <input type="text" id="edit-contato-documento">
+                <div class="checkbox-container">
+                    <label><input type="checkbox" id="edit-contato-e-cliente"> É Cliente</label>
+                    <label><input type="checkbox" id="edit-contato-e-fornecedor"> É Fornecedor</label>
                 </div>
-                <label for="edit-nome_razao_social" id="edit-label-nome">Nome Completo</label>
-                <input type="text" id="edit-nome_razao_social">
-                <label for="edit-cpf_cnpj" id="edit-label-documento">CPF</label>
-                <input type="text" id="edit-cpf_cnpj">
-                <label for="edit-telefone">Telefone</label>
-                <input type="text" id="edit-telefone">
-                <label for="edit-email">E-mail</label>
-                <input type="email" id="edit-email">
-                <label for="edit-endereco">Endereço</label>
-                <input type="text" id="edit-endereco">
                 <button type="submit">Salvar Alterações</button>
             </form>
+        </div>
+    </div>
+
+    <div id="modal-ver-nota" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Detalhes da Nota Fiscal</h2>
+            <div id="detalhes-nota-conteudo">
+                <!-- Detalhes serão inseridos aqui pelo JavaScript -->
+            </div>
         </div>
     </div>
 
