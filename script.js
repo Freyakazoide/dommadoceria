@@ -2,6 +2,7 @@ const SUPABASE_URL = 'https://bujffxasexuglgmtloxv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amZmeGFzZXh1Z2xnbXRsb3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTY1NDAsImV4cCI6MjA3MTEzMjU0MH0.OmbttnQ6ThFCYuspr3IL2b25RULx_ZqoXUfcoN7KF_M';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ---===[ FUNÇÕES GLOBAIS DE AÇÃO (CHAMADAS PELO ONCLICK) ]===---
 function editarInsumo(id, nome, unidade, preco) {
     const modal = document.getElementById('modal-editar-insumo');
     document.getElementById('edit-insumo-id').value = id;

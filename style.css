@@ -340,3 +340,75 @@ select {
 .custo-adicional-item { display: grid; grid-template-columns: 1fr 120px 40px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
 .custo-adicional-item input { margin-bottom: 0; }
 .custo-adicional-item .btn-remover-custo { width: 40px; height: 40px; padding: 0; background-color: var(--cor-perigo); }
+
+
+.sub-nav {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--cor-borda);
+    margin-bottom: 1.5rem;
+}
+.sub-nav-link {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--cor-texto-suave);
+    border-bottom: 3px solid transparent;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+}
+.sub-nav-link.active {
+    color: var(--cor-principal);
+    border-bottom-color: var(--cor-principal);
+}
+
+.nota-fiscal-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+.nota-fiscal-coluna {
+    display: flex;
+    flex-direction: column;
+}
+#nf-itens-container {
+    background-color: var(--cor-fundo-app);
+    padding: 1rem;
+    border-radius: var(--raio-borda);
+    flex-grow: 1;
+    min-height: 200px;
+}
+.nf-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--cor-borda);
+}
+.nf-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 2px solid var(--cor-texto);
+}
+
+.status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: white;
+}
+.status-pago {
+    background-color: var(--cor-sucesso);
+}
+.status-pendente {
+    background-color: var(--cor-aviso);
+    color: var(--cor-texto);
+}
