@@ -44,12 +44,20 @@ async function gerenciarProduto(produtoId) {
 }
 
 async function deletarProduto(id, nome) {
-    if (!confirm(`DELETAR PRODUTO "${nome}"?\n\nATENÇÃO: Todas as receitas e vendas associadas a ele também serão apagadas!`)) return;
+    if (!confirm(`DELETAR PRODUTO "${nome}"?\n\nATENÇÃO: Todas as receitas e notas fiscais associadas a ele também serão apagadas!`)) return;
+    
+    await supabaseClient.from('nota_fiscal_itens').delete().match({ produto_id: id });
     await supabaseClient.from('receitas').delete().match({ produto_id: id });
-    await supabaseClient.from('notas_fiscais').delete().match({ cliente_id: id }); // Assumindo que o ID do cliente é o mesmo do produto, o que pode não ser o caso.
     const { error } = await supabaseClient.from('produtos').delete().match({ id: id });
-    if (error) { alert(`Erro ao deletar o produto "${nome}".`); } 
-    else { alert(`Produto "${nome}" deletado com sucesso!`); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+
+    if (error) { 
+        alert(`Erro ao deletar o produto "${nome}".`); 
+        console.error(error);
+    } 
+    else { 
+        alert(`Produto "${nome}" deletado com sucesso!`); 
+        document.dispatchEvent(new CustomEvent('dadosAtualizados')); 
+    }
 }
 
 async function removerIngrediente(receitaItemId) {
@@ -142,7 +150,8 @@ function recalcularAnaliseDeCustos() {
 }
 
 function atualizarLabelsFormularioCliente(prefixo = '') {
-    const tipo = document.querySelector(`input[name="${prefixo ? prefixo + '_' : ''}tipo_pessoa"]:checked`).value;
+    const radioName = prefixo ? 'edit_tipo_pessoa' : 'tipo_pessoa';
+    const tipo = document.querySelector(`input[name="${radioName}"]:checked`).value;
     const labelNome = document.getElementById(`${prefixo}label-nome`);
     const labelDocumento = document.getElementById(`${prefixo}label-documento`);
     const inputNome = document.getElementById(`${prefixo}nome_razao_social`);
@@ -189,7 +198,10 @@ document.addEventListener('DOMContentLoaded', () => {
     navButtons.forEach(button => button.addEventListener('click', () => mostrarTela(button.getAttribute('data-target'))));
     
     modals.forEach(modal => {
-        modal.querySelector('.close-button').onclick = () => modal.style.display = 'none';
+        const closeButton = modal.querySelector('.close-button');
+        if (closeButton) {
+            closeButton.onclick = () => modal.style.display = 'none';
+        }
     });
     window.onclick = (event) => {
         if (event.target.classList.contains('modal')) {
@@ -340,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
             endereco: document.getElementById('endereco').value,
         };
         const { error } = await supabaseClient.from('clientes').insert([cliente]);
-        if (error) { alert('Erro ao salvar cliente.'); } 
+        if (error) { alert('Erro ao salvar cliente.'); console.error(error); } 
         else { alert('Cliente salvo com sucesso!'); formClientes.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
