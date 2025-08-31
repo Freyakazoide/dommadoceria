@@ -2,6 +2,30 @@ const SUPABASE_URL = 'https://bujffxasexuglgmtloxv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amZmeGFzZXh1Z2xnbXRsb3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTY1NDAsImV4cCI6MjA3MTEzMjU0MH0.OmbttnQ6ThFCYuspr3IL2b25RULx_ZqoXUfcoN7KF_M';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ---===[ SISTEMA DE NOTIFICAÇÃO ]===---
+function showNotification(message, type = 'success') {
+    const container = document.getElementById('notification-container');
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    container.appendChild(notification);
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+// ---===[ FUNÇÕES GERAIS ]===---
+function parsePapeis(papeis) {
+    if (typeof papeis === 'string') {
+        try {
+            return JSON.parse(papeis);
+        } catch (e) {
+            return [];
+        }
+    }
+    return Array.isArray(papeis) ? papeis : [];
+}
+
 function editarInsumo(id, nome, unidade, preco) {
     const modal = document.getElementById('modal-editar-insumo');
     document.getElementById('edit-insumo-id').value = id;
@@ -16,12 +40,12 @@ async function deletarInsumo(id, nome) {
     const { error } = await supabaseClient.from('insumos').delete().match({ id: id });
     if (error) {
         if (error.code === '23503') {
-            alert(`ERRO: "${nome}" não pode ser deletado pois está em uso em alguma receita.`);
+            showNotification(`ERRO: "${nome}" não pode ser deletado pois está em uso em alguma receita.`, 'error');
         } else {
-            alert(`Não foi possível deletar o insumo "${nome}".`);
+            showNotification(`Não foi possível deletar o insumo "${nome}".`, 'error');
         }
     } else {
-        alert(`Insumo "${nome}" deletado com sucesso!`);
+        showNotification(`Insumo "${nome}" deletado com sucesso!`);
         document.dispatchEvent(new CustomEvent('dadosAtualizados'));
     }
 }
@@ -29,7 +53,7 @@ async function deletarInsumo(id, nome) {
 async function gerenciarProduto(produtoId) {
     const modal = document.getElementById('modal-gerenciar-produto');
     const { data: produto, error } = await supabaseClient.from('produtos').select('*').eq('id', produtoId).single();
-    if (error) { return alert('Erro ao carregar dados do produto.'); }
+    if (error) { return showNotification('Erro ao carregar dados do produto.', 'error'); }
     
     document.getElementById('nome-produto-modal').textContent = produto.nome;
     document.getElementById('gerenciar-produto-id').value = produto.id;
@@ -51,18 +75,18 @@ async function deletarProduto(id, nome) {
     const { error } = await supabaseClient.from('produtos').delete().match({ id: id });
 
     if (error) { 
-        alert(`Erro ao deletar o produto "${nome}".`); 
-        console.error(error);
+        showNotification(`Erro ao deletar o produto "${nome}".`, 'error'); 
+        console.error('Erro ao deletar produto:', error);
     } 
     else { 
-        alert(`Produto "${nome}" deletado com sucesso!`); 
+        showNotification(`Produto "${nome}" deletado com sucesso!`); 
         document.dispatchEvent(new CustomEvent('dadosAtualizados')); 
     }
 }
 
 async function removerIngrediente(receitaItemId) {
     const { error } = await supabaseClient.from('receitas').delete().match({ id: receitaItemId });
-    if (error) { alert('Erro ao remover ingrediente.'); }
+    if (error) { showNotification('Erro ao remover ingrediente.', 'error'); }
     else { 
         const produtoId = document.getElementById('gerenciar-produto-id').value;
         carregarIngredientesNoModal(produtoId);
@@ -72,7 +96,7 @@ async function removerIngrediente(receitaItemId) {
 async function editarContato(contatoId) {
     const modal = document.getElementById('modal-editar-contato');
     const { data: contato, error } = await supabaseClient.from('contatos').select('*').eq('id', contatoId).single();
-    if (error) return alert('Erro ao carregar dados do contato.');
+    if (error) return showNotification('Erro ao carregar dados do contato.', 'error');
 
     document.getElementById('edit-contato-id').value = contato.id;
     document.getElementById('edit-contato-nome').value = contato.nome_razao_social;
@@ -81,18 +105,7 @@ async function editarContato(contatoId) {
     document.getElementById('edit-contato-email').value = contato.email;
     document.getElementById('edit-contato-endereco').value = contato.endereco;
     
-    let papeis = contato.papeis;
-    if (typeof papeis === 'string') {
-        try {
-            papeis = JSON.parse(papeis);
-        } catch (e) {
-            papeis = [];
-        }
-    }
-    if (!Array.isArray(papeis)) {
-        papeis = [];
-    }
-
+    const papeis = parsePapeis(contato.papeis);
     document.getElementById('edit-contato-e-cliente').checked = papeis.includes('Cliente');
     document.getElementById('edit-contato-e-fornecedor').checked = papeis.includes('Fornecedor');
     
@@ -106,12 +119,12 @@ async function deletarContato(id, nome) {
     const { error } = await supabaseClient.from('contatos').delete().match({ id: id });
     if (error) {
         if (error.code === '23503') {
-            alert(`ERRO: "${nome}" não pode ser deletado pois está associado a uma ou mais notas fiscais.`);
+            showNotification(`ERRO: "${nome}" não pode ser deletado pois está associado a notas fiscais.`, 'error');
         } else {
-            alert(`Erro ao deletar o contato "${nome}".`);
+            showNotification(`Erro ao deletar o contato "${nome}".`, 'error');
         }
     } else {
-        alert(`Contato "${nome}" deletado com sucesso!`);
+        showNotification(`Contato "${nome}" deletado com sucesso!`);
         document.dispatchEvent(new CustomEvent('dadosAtualizados'));
     }
 }
@@ -174,7 +187,6 @@ async function verDetalhesNota(notaId) {
     if (error) { container.innerHTML = '<p>Erro ao carregar detalhes.</p>'; return; }
 
     const { data: itens, errorItens } = await supabaseClient.from('nota_fiscal_itens').select(`*, produtos(nome)`).eq('nota_fiscal_id', notaId);
-    
     if (errorItens) { container.innerHTML = '<p>Erro ao carregar itens da nota.</p>'; return; }
 
     let html = `
@@ -198,16 +210,16 @@ async function verDetalhesNota(notaId) {
 async function marcarComoPago(notaId) {
     if (!confirm('Deseja marcar esta nota como PAGA?')) return;
     const { error } = await supabaseClient.from('notas_fiscais').update({ status_pagamento: 'Pago' }).match({ id: notaId });
-    if (error) { alert('Erro ao atualizar status.'); }
-    else { document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+    if (error) { showNotification('Erro ao atualizar status.', 'error'); }
+    else { document.dispatchEvent(new CustomEvent('dadosAtualizados', { detail: { highlightedId: notaId } })); }
 }
 
 async function deletarNota(notaId) {
     if (!confirm('TEM CERTEZA QUE QUER DELETAR ESTA NOTA FISCAL?\nEsta ação não pode ser desfeita.')) return;
     await supabaseClient.from('nota_fiscal_itens').delete().match({ nota_fiscal_id: notaId });
     const { error } = await supabaseClient.from('notas_fiscais').delete().match({ id: notaId });
-    if (error) { alert('Erro ao deletar a nota fiscal.'); }
-    else { alert('Nota fiscal deletada com sucesso.'); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+    if (error) { showNotification('Erro ao deletar a nota fiscal.', 'error'); }
+    else { showNotification('Nota fiscal deletada com sucesso.'); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
 }
 
 function atualizarLabelsFormularioContato(prefixo = '') {
@@ -248,6 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formContatos = document.getElementById('form-contatos');
     const formEditarContato = document.getElementById('form-editar-contato');
     const formAddNfItem = document.getElementById('form-add-nf-item');
+    const formDadosNf = document.getElementById('form-dados-nf');
     const btnSalvarNf = document.getElementById('btn-salvar-nf');
 
     function mostrarTela(targetId) {
@@ -321,8 +334,8 @@ document.addEventListener('DOMContentLoaded', () => {
             unidade_medida: document.getElementById('unidade-medida').value, 
             preco_unitario: document.getElementById('preco-unitario').value 
         }]);
-        if (error) { alert('Ocorreu um erro ao salvar.'); } 
-        else { alert('Insumo salvo!'); formInsumos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+        if (error) { showNotification('Ocorreu um erro ao salvar.', 'error'); } 
+        else { showNotification('Insumo salvo!'); formInsumos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
     
     formEditarInsumo.addEventListener('submit', async (event) => {
@@ -333,8 +346,8 @@ document.addEventListener('DOMContentLoaded', () => {
             unidade_medida: document.getElementById('edit-unidade-medida').value, 
             preco_unitario: document.getElementById('edit-preco-unitario').value 
         }).match({ id });
-        if (error) { alert('Não foi possível salvar as alterações.'); } 
-        else { alert('Insumo atualizado!'); document.getElementById('modal-editar-insumo').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+        if (error) { showNotification('Não foi possível salvar as alterações.', 'error'); } 
+        else { showNotification('Insumo atualizado!'); document.getElementById('modal-editar-insumo').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
     function renderizarTabelaProdutos() {
@@ -362,8 +375,8 @@ document.addEventListener('DOMContentLoaded', () => {
     formProdutos.addEventListener('submit', async (event) => {
         event.preventDefault();
         const { error } = await supabaseClient.from('produtos').insert([{ nome: document.getElementById('nome-produto').value }]);
-        if (error) { alert('Erro ao salvar produto.'); } 
-        else { alert('Produto salvo!'); formProdutos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+        if (error) { showNotification('Erro ao salvar produto.', 'error'); } 
+        else { showNotification('Produto salvo!'); formProdutos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
     formAdicionarIngrediente.addEventListener('submit', async (event) => {
@@ -374,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
             insumo_id: document.getElementById('select-insumo-receita').value, 
             quantidade: document.getElementById('quantidade-ingrediente').value 
         }]);
-        if (error) { alert('Erro ao adicionar ingrediente.'); } 
+        if (error) { showNotification('Erro ao adicionar ingrediente.', 'error'); } 
         else { formAdicionarIngrediente.reset(); carregarIngredientesNoModal(produtoId); }
     });
     
@@ -384,11 +397,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-salvar-preco-venda').addEventListener('click', async () => {
         const produtoId = document.getElementById('gerenciar-produto-id').value;
         const precoFinal = document.getElementById('preco-final-definido').value;
-        if (!precoFinal || precoFinal <= 0) { return alert('Defina um preço de venda válido.'); }
+        if (!precoFinal || precoFinal <= 0) { return showNotification('Defina um preço de venda válido.', 'error'); }
         const { error } = await supabaseClient.from('produtos').update({ preco_venda: precoFinal }).match({ id: produtoId });
-        if (error) { alert('Erro ao salvar o preço.'); } 
+        if (error) { showNotification('Erro ao salvar o preço.', 'error'); } 
         else { 
-            alert('Preço de venda salvo com sucesso!');
+            showNotification('Preço de venda salvo com sucesso!');
             document.getElementById('modal-gerenciar-produto').style.display = 'none';
             document.dispatchEvent(new CustomEvent('dadosAtualizados'));
         }
@@ -403,23 +416,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         contatosData.forEach(contato => {
             const tr = document.createElement('tr');
-            
-            let papeis = contato.papeis;
-            if (typeof papeis === 'string') {
-                try {
-                    papeis = JSON.parse(papeis);
-                } catch (e) {
-                    papeis = [];
-                }
-            }
-            if (!Array.isArray(papeis)) {
-                papeis = [];
-            }
-            const papeisStr = papeis.join(', ');
-
+            const papeis = parsePapeis(contato.papeis).join(', ');
             tr.innerHTML = `
                 <td>${contato.nome_razao_social}</td>
-                <td>${papeisStr}</td>
+                <td>${papeis}</td>
                 <td>${contato.telefone || 'N/A'}</td>
                 <td class="actions-container">
                     <button class="btn-acao btn-warning" onclick="editarContato(${contato.id})">✏️</button>
@@ -453,8 +453,8 @@ document.addEventListener('DOMContentLoaded', () => {
             papeis: papeis
         };
         const { error } = await supabaseClient.from('contatos').insert([contato]);
-        if (error) { alert('Erro ao salvar contato.'); console.error(error); } 
-        else { alert('Contato salvo com sucesso!'); formContatos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+        if (error) { showNotification('Erro ao salvar contato.', 'error'); console.error(error); } 
+        else { showNotification('Contato salvo com sucesso!'); formContatos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
     formEditarContato.addEventListener('submit', async (event) => {
@@ -474,8 +474,8 @@ document.addEventListener('DOMContentLoaded', () => {
             papeis: papeis
         };
         const { error } = await supabaseClient.from('contatos').update(contato).match({ id });
-        if (error) { alert('Erro ao atualizar contato.'); } 
-        else { alert('Contato atualizado com sucesso!'); document.getElementById('modal-editar-contato').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+        if (error) { showNotification('Erro ao atualizar contato.', 'error'); } 
+        else { showNotification('Contato atualizado com sucesso!'); document.getElementById('modal-editar-contato').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
     function renderizarItensNf() {
@@ -503,28 +503,37 @@ document.addEventListener('DOMContentLoaded', () => {
         nfItens.splice(index, 1);
         renderizarItensNf();
     }
+    
+    function resetarFormularioNf() {
+        nfItens = [];
+        renderizarItensNf();
+        formAddNfItem.reset();
+        formDadosNf.reset();
+    }
 
     formAddNfItem.addEventListener('submit', (event) => {
         event.preventDefault();
         const produtoId = document.getElementById('nf-produto').value;
+        if (!produtoId) return showNotification('Selecione um produto.', 'error');
+
         const produtoSelecionado = produtosData.find(p => p.id == produtoId);
-        if (!produtoSelecionado) return alert('Selecione um produto válido.');
-        if (!produtoSelecionado.preco_venda) return alert('Este produto não foi precificado. Vá para a tela de Produtos para definir um preço.');
+        if (!produtoSelecionado.preco_venda) return showNotification('Este produto não foi precificado. Defina um preço na tela de Produtos.', 'error');
         
         nfItens.push({
-            produto_id: produtoId,
+            produto_id: parseInt(produtoId, 10), // CORREÇÃO: Garantir que o ID é um número
             nome: produtoSelecionado.nome,
             quantidade: parseFloat(document.getElementById('nf-quantidade').value),
             preco_unitario_momento: parseFloat(produtoSelecionado.preco_venda)
         });
         renderizarItensNf();
         formAddNfItem.reset();
+        document.getElementById('nf-produto').focus();
     });
 
     btnSalvarNf.addEventListener('click', async () => {
-        if (nfItens.length === 0) return alert('Adicione pelo menos um produto à nota.');
+        if (nfItens.length === 0) return showNotification('Adicione pelo menos um produto à nota.', 'error');
         const clienteId = document.getElementById('nf-cliente').value;
-        if (!clienteId) return alert('Selecione um cliente.');
+        if (!clienteId) return showNotification('Selecione um cliente.', 'error');
 
         const valorTotal = nfItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
         
@@ -535,7 +544,10 @@ document.addEventListener('DOMContentLoaded', () => {
             metodo_pagamento: document.getElementById('nf-metodo-pagamento').value
         }]).select().single();
 
-        if (error) { console.error(error); return alert('Erro ao salvar a nota fiscal.'); }
+        if (error) {
+            console.error('Erro ao salvar nota fiscal:', error);
+            return showNotification('Erro ao salvar a nota fiscal.', 'error');
+        }
 
         const itensParaSalvar = nfItens.map(item => ({
             nota_fiscal_id: notaFiscal.id,
@@ -547,25 +559,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const { error: errorItens } = await supabaseClient.from('nota_fiscal_itens').insert(itensParaSalvar);
 
         if (errorItens) {
-            alert('Erro ao salvar os itens da nota. A nota principal foi criada mas está vazia.');
+            console.error('Erro ao salvar itens da nota:', errorItens);
+            showNotification('Erro ao salvar os itens da nota. A nota principal foi criada mas está vazia.', 'error');
         } else {
-            alert('Nota Fiscal salva com sucesso!');
-            nfItens = [];
-            renderizarItensNf();
-            document.dispatchEvent(new CustomEvent('dadosAtualizados'));
+            showNotification('Nota Fiscal salva com sucesso!');
+            resetarFormularioNf();
+            document.dispatchEvent(new CustomEvent('dadosAtualizados', { detail: { highlightedId: notaFiscal.id } }));
+            
+            // MELHORIA DE FLUXO: Mudar para a aba de histórico
+            document.getElementById('btn-tab-historico-saida').click();
         }
     });
 
-    async function renderizarTabelaNotasFiscais() {
-        const { data, error } = await supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`).order('created_at', { ascending: false });
+    async function renderizarTabelaNotasFiscais(highlightedId = null) {
+        const { data, error } = await supabaseClient.from('notas_fiscais').select(`id, created_at, valor_total, status_pagamento, contatos(nome_razao_social)`).order('created_at', { ascending: false });
         const corpoTabela = document.getElementById('corpo-tabela-notas-saida');
         corpoTabela.innerHTML = '';
-        if (!data || data.length === 0) {
+        if (error || !data || data.length === 0) {
             corpoTabela.innerHTML = '<tr><td colspan="5">Nenhuma nota fiscal emitida.</td></tr>';
             return;
         }
         data.forEach(nf => {
             const tr = document.createElement('tr');
+            if (nf.id === highlightedId) {
+                tr.classList.add('highlight');
+            }
             const statusClass = nf.status_pagamento === 'Pago' ? 'status-pago' : 'status-pendente';
             tr.innerHTML = `
                 <td>${new Date(nf.created_at).toLocaleDateString('pt-BR')}</td>
@@ -582,7 +600,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    async function atualizarTodosOsDados() {
+    async function atualizarTodosOsDados(event) {
+        const highlightedId = event?.detail?.highlightedId;
+
         const [insumosResult, produtosResult, contatosResult] = await Promise.all([
             supabaseClient.from('insumos').select('*').order('nome'),
             supabaseClient.from('produtos').select('*').order('nome'),
@@ -602,27 +622,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectClienteNf = document.getElementById('nf-cliente');
         
         selectInsumo.innerHTML = '<option value="">Selecione...</option>';
-        selectProdutoNf.innerHTML = '<option value="">Selecione...</option>';
-        selectClienteNf.innerHTML = '<option value="">Selecione...</option>';
+        selectProdutoNf.innerHTML = '<option value="">Selecione um produto...</option>';
+        selectClienteNf.innerHTML = '<option value="">Selecione um cliente...</option>';
         
         insumosData.forEach(i => selectInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`);
         produtosData.filter(p => p.preco_venda > 0).forEach(p => selectProdutoNf.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`);
         
-        const clientesFiltrados = contatosData.filter(c => {
-            let papeis = c.papeis;
-            if (typeof papeis === 'string') {
-                try {
-                    papeis = JSON.parse(papeis);
-                } catch (e) {
-                    papeis = [];
-                }
-            }
-            return Array.isArray(papeis) && papeis.includes('Cliente');
-        });
-        
+        const clientesFiltrados = contatosData.filter(c => parsePapeis(c.papeis).includes('Cliente'));
         clientesFiltrados.forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
         
-        await renderizarTabelaNotasFiscais();
+        await renderizarTabelaNotasFiscais(highlightedId);
     }
     
     document.addEventListener('dadosAtualizados', atualizarTodosOsDados);
