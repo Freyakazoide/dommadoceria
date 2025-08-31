@@ -11,7 +11,7 @@ function showNotification(message, type = 'success') {
     container.appendChild(notification);
     setTimeout(() => {
         notification.remove();
-    }, 6000); // Duração aumentada para 6 segundos
+    }, 8000); // Duração aumentada para 6 segundos
 }
 
 // ---===[ FUNÇÕES GERAIS ]===---
