@@ -11,7 +11,7 @@ function showNotification(message, type = 'success') {
     container.appendChild(notification);
     setTimeout(() => {
         notification.remove();
-    }, 5000);
+    }, 6000); // Duração aumentada para 6 segundos
 }
 
 // ---===[ FUNÇÕES GERAIS ]===---
@@ -26,7 +26,8 @@ function parsePapeis(papeis) {
     return Array.isArray(papeis) ? papeis : [];
 }
 
-function editarInsumo(id, nome, unidade, preco) {
+// ... (todas as outras funções como editarInsumo, deletarInsumo, etc. permanecem as mesmas) ...
+async function editarInsumo(id, nome, unidade, preco) {
     const modal = document.getElementById('modal-editar-insumo');
     document.getElementById('edit-insumo-id').value = id;
     document.getElementById('edit-nome-insumo').value = nome;
@@ -520,7 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!produtoSelecionado.preco_venda) return showNotification('Este produto não foi precificado. Defina um preço na tela de Produtos.', 'error');
         
         nfItens.push({
-            produto_id: parseInt(produtoId, 10), // CORREÇÃO: Garantir que o ID é um número
+            produto_id: parseInt(produtoId, 10),
             nome: produtoSelecionado.nome,
             quantidade: parseFloat(document.getElementById('nf-quantidade').value),
             preco_unitario_momento: parseFloat(produtoSelecionado.preco_venda)
@@ -538,7 +539,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const valorTotal = nfItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
         
         const { data: notaFiscal, error } = await supabaseClient.from('notas_fiscais').insert([{
-            cliente_id: clienteId,
+            // CORREÇÃO CRÍTICA: Converter ID do cliente para número
+            cliente_id: parseInt(clienteId, 10),
             valor_total: valorTotal,
             status_pagamento: document.getElementById('nf-status-pagamento').value,
             metodo_pagamento: document.getElementById('nf-metodo-pagamento').value
@@ -566,7 +568,6 @@ document.addEventListener('DOMContentLoaded', () => {
             resetarFormularioNf();
             document.dispatchEvent(new CustomEvent('dadosAtualizados', { detail: { highlightedId: notaFiscal.id } }));
             
-            // MELHORIA DE FLUXO: Mudar para a aba de histórico
             document.getElementById('btn-tab-historico-saida').click();
         }
     });

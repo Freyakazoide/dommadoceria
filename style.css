@@ -7,6 +7,7 @@
     --cor-fundo-app: #f8f9fa;
     --cor-fundo-sidebar: #ffffff;
     --cor-fundo-conteudo: #ffffff;
+    --cor-superficie: #ffffff; /* <-- COR ADICIONADA AQUI */
     --cor-texto: #212529;
     --cor-texto-suave: #6c757d;
     --cor-borda: #dee2e6;
@@ -331,8 +332,6 @@ input[type="checkbox"], input[type="radio"] {
 .custo-adicional-item { display: grid; grid-template-columns: 1fr 120px 40px; gap: 0.5rem; margin-bottom: 0.5rem; align-items: center; }
 .custo-adicional-item input { margin-bottom: 0; }
 .custo-adicional-item .btn-remover-custo { width: 40px; height: 40px; padding: 0; background-color: var(--cor-perigo); }
-#lista-vendas { list-style: none; padding: 0; }
-#lista-vendas li { background-color: #f9f9f9; padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; border-left: 3px solid var(--cor-info); }
 
 /* ---===[ 9. NOTIFICAÇÕES ]===--- */
 .notification-container {
@@ -354,7 +353,8 @@ input[type="checkbox"], input[type="radio"] {
     display: flex;
     align-items: center;
     gap: 1rem;
-    animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 4.5s forwards;
+    /* DURAÇÃO AUMENTADA AQUI */
+    animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 5.5s forwards;
     opacity: 0;
     font-weight: 500;
 }
