@@ -536,7 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { data, error } = await supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`).order('created_at', { ascending: false });
         const corpoTabela = document.getElementById('corpo-tabela-notas-saida');
         corpoTabela.innerHTML = '';
-        if (error || !data || data.length === 0) {
+        if (!data || data.length === 0) {
             corpoTabela.innerHTML = '<tr><td colspan="5">Nenhuma nota fiscal emitida.</td></tr>';
             return;
         }
@@ -559,7 +559,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     async function atualizarTodosOsDados() {
-        console.log("--- INICIANDO ATUALIZAÇÃO DE DADOS ---");
         const [insumosResult, produtosResult, contatosResult] = await Promise.all([
             supabaseClient.from('insumos').select('*').order('nome'),
             supabaseClient.from('produtos').select('*').order('nome'),
@@ -570,8 +569,6 @@ document.addEventListener('DOMContentLoaded', () => {
         produtosData = produtosResult.data || [];
         contatosData = contatosResult.data || [];
         
-        console.log("DEBUG: Contatos recebidos do Supabase:", contatosData);
-
         renderizarTabelaInsumos();
         renderizarTabelaProdutos();
         renderizarTabelaContatos();
@@ -588,12 +585,10 @@ document.addEventListener('DOMContentLoaded', () => {
         produtosData.filter(p => p.preco_venda > 0).forEach(p => selectProdutoNf.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`);
         
         const clientesFiltrados = contatosData.filter(c => Array.isArray(c.papeis) && c.papeis.includes('Cliente'));
-        console.log("DEBUG: Contatos filtrados (apenas clientes):", clientesFiltrados);
         
         clientesFiltrados.forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
         
         await renderizarTabelaNotasFiscais();
-        console.log("--- ATUALIZAÇÃO DE DADOS CONCLUÍDA ---");
     }
     
     document.addEventListener('dadosAtualizados', atualizarTodosOsDados);
