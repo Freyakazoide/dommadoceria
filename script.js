@@ -75,15 +75,17 @@ async function editarContato(contatoId) {
     if (error) return alert('Erro ao carregar dados do contato.');
 
     document.getElementById('edit-contato-id').value = contato.id;
-    document.querySelector(`input[name="edit_tipo_pessoa"][value="${contato.tipo_pessoa}"]`).checked = true;
     document.getElementById('edit-contato-nome').value = contato.nome_razao_social;
     document.getElementById('edit-contato-documento').value = contato.cpf_cnpj;
     document.getElementById('edit-contato-telefone').value = contato.telefone;
     document.getElementById('edit-contato-email').value = contato.email;
     document.getElementById('edit-contato-endereco').value = contato.endereco;
-    document.getElementById('edit-contato-e-cliente').checked = (contato.papeis || []).includes('Cliente');
-    document.getElementById('edit-contato-e-fornecedor').checked = (contato.papeis || []).includes('Fornecedor');
     
+    const papeis = Array.isArray(contato.papeis) ? contato.papeis : [];
+    document.getElementById('edit-contato-e-cliente').checked = papeis.includes('Cliente');
+    document.getElementById('edit-contato-e-fornecedor').checked = papeis.includes('Fornecedor');
+    
+    document.querySelector(`input[name="edit_tipo_pessoa"][value="${contato.tipo_pessoa}"]`).checked = true;
     atualizarLabelsFormularioContato('edit-');
     modal.style.display = 'block';
 }
@@ -390,9 +392,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         contatosData.forEach(contato => {
             const tr = document.createElement('tr');
+            const papeis = Array.isArray(contato.papeis) ? contato.papeis.join(', ') : '';
             tr.innerHTML = `
                 <td>${contato.nome_razao_social}</td>
-                <td>${(contato.papeis || []).join(', ')}</td>
+                <td>${papeis}</td>
                 <td>${contato.telefone || 'N/A'}</td>
                 <td class="actions-container">
                     <button class="btn-acao btn-warning" onclick="editarContato(${contato.id})">✏️</button>
@@ -580,7 +583,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         insumosData.forEach(i => selectInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`);
         produtosData.filter(p => p.preco_venda > 0).forEach(p => selectProdutoNf.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`);
-        contatosData.filter(c => Array.isArray(c.papeis) && c.papeis.includes('Cliente')).forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
+        
+        const clientesFiltrados = contatosData.filter(c => Array.isArray(c.papeis) && c.papeis.includes('Cliente'));
+        
+        clientesFiltrados.forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
         
         await renderizarTabelaNotasFiscais();
     }
