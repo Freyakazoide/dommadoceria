@@ -81,7 +81,18 @@ async function editarContato(contatoId) {
     document.getElementById('edit-contato-email').value = contato.email;
     document.getElementById('edit-contato-endereco').value = contato.endereco;
     
-    const papeis = Array.isArray(contato.papeis) ? contato.papeis : [];
+    let papeis = contato.papeis;
+    if (typeof papeis === 'string') {
+        try {
+            papeis = JSON.parse(papeis);
+        } catch (e) {
+            papeis = [];
+        }
+    }
+    if (!Array.isArray(papeis)) {
+        papeis = [];
+    }
+
     document.getElementById('edit-contato-e-cliente').checked = papeis.includes('Cliente');
     document.getElementById('edit-contato-e-fornecedor').checked = papeis.includes('Fornecedor');
     
@@ -392,10 +403,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         contatosData.forEach(contato => {
             const tr = document.createElement('tr');
-            const papeis = Array.isArray(contato.papeis) ? contato.papeis.join(', ') : '';
+            
+            let papeis = contato.papeis;
+            if (typeof papeis === 'string') {
+                try {
+                    papeis = JSON.parse(papeis);
+                } catch (e) {
+                    papeis = [];
+                }
+            }
+            if (!Array.isArray(papeis)) {
+                papeis = [];
+            }
+            const papeisStr = papeis.join(', ');
+
             tr.innerHTML = `
                 <td>${contato.nome_razao_social}</td>
-                <td>${papeis}</td>
+                <td>${papeisStr}</td>
                 <td>${contato.telefone || 'N/A'}</td>
                 <td class="actions-container">
                     <button class="btn-acao btn-warning" onclick="editarContato(${contato.id})">✏️</button>
@@ -584,7 +608,17 @@ document.addEventListener('DOMContentLoaded', () => {
         insumosData.forEach(i => selectInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`);
         produtosData.filter(p => p.preco_venda > 0).forEach(p => selectProdutoNf.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`);
         
-        const clientesFiltrados = contatosData.filter(c => Array.isArray(c.papeis) && c.papeis.includes('Cliente'));
+        const clientesFiltrados = contatosData.filter(c => {
+            let papeis = c.papeis;
+            if (typeof papeis === 'string') {
+                try {
+                    papeis = JSON.parse(papeis);
+                } catch (e) {
+                    papeis = [];
+                }
+            }
+            return Array.isArray(papeis) && papeis.includes('Cliente');
+        });
         
         clientesFiltrados.forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
         
@@ -597,4 +631,3 @@ document.addEventListener('DOMContentLoaded', () => {
     atualizarTodosOsDados();
     atualizarLabelsFormularioContato();
 });
-
