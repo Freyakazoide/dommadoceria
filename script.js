@@ -660,14 +660,46 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('ne-insumo').focus();
     });
 
-    btnSalvarNe.addEventListener('click', async () => {
-        if (neItens.length === 0) return showNotification('Adicione pelo menos um insumo à nota.', 'error');
-        const fornecedorId = document.getElementById('ne-fornecedor').value;
-        if (!fornecedorId) return showNotification('Selecione um fornecedor.', 'error');
+btnSalvarNe.addEventListener('click', async () => {
+    if (neItens.length === 0) return showNotification('Adicione pelo menos um insumo à nota.', 'error');
+    const fornecedorId = document.getElementById('ne-fornecedor').value;
+    const dataCompra = document.getElementById('ne-data').value;
+    if (!fornecedorId || !dataCompra) return showNotification('Selecione um fornecedor e uma data.', 'error');
 
-        showNotification("Funcionalidade de salvar Nota de Entrada em desenvolvimento.", "info");
+    const valorTotal = neItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
+
+    // 1. Salva a "capa" da nota de entrada
+    const { data: notaEntrada, error } = await supabaseClient.from('notas_entrada').insert([{
+        fornecedor_id: parseInt(fornecedorId, 10),
+        data_compra: dataCompra,
+        valor_total: valorTotal
+    }]).select().single();
+
+    if (error) {
+        console.error('Erro ao salvar nota de entrada:', error);
+        return showNotification('Erro ao salvar a nota de compra.', 'error');
+    }
+
+    // 2. Associa os itens à nota que acabamos de criar
+    const itensParaSalvar = neItens.map(item => ({
+        nota_entrada_id: notaEntrada.id,
+        insumo_id: item.insumo_id,
+        quantidade: item.quantidade,
+        preco_unitario_momento: item.preco_unitario_momento
+    }));
+
+    const { error: errorItens } = await supabaseClient.from('nota_entrada_itens').insert(itensParaSalvar);
+
+    if (errorItens) {
+        console.error('Erro ao salvar itens da nota de entrada:', errorItens);
+        showNotification('Erro ao salvar os insumos da nota. A nota principal foi criada mas está vazia.', 'error');
+    } else {
+        showNotification('Nota de Compra salva com sucesso!');
         resetarFormularioNe();
-    });
+        document.dispatchEvent(new CustomEvent('dadosAtualizados'));
+        // Futuramente, podemos redirecionar para o histórico de compras
+    }
+});
     
     function displayNotasFiscais() {
         const corpoTabela = document.getElementById('corpo-tabela-notas-saida');
