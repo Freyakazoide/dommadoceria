@@ -223,25 +223,6 @@ async function deletarNota(notaId) {
     }
 }
 
-async function editarNotaSaida(notaId) {
-    const modal = document.getElementById('modal-editar-nota-saida');
-    document.getElementById('edit-ns-hidden-id').value = notaId;
-    document.getElementById('edit-ns-id').textContent = `(#${notaId})`;
-
-    const { data: nota, error } = await supabaseClient.from('notas_fiscais').select(`*, contatos(id)`).eq('id', notaId).single();
-    if (error) return showNotification('Erro ao carregar dados da nota.', 'error');
-
-    const { data: itens, errorItens } = await supabaseClient.from('nota_fiscal_itens').select(`*, produtos(*)`).eq('nota_fiscal_id', notaId);
-    if (errorItens) return showNotification('Erro ao carregar itens da nota.', 'error');
-    
-    document.getElementById('edit-ns-cliente').value = nota.contatos.id;
-    document.getElementById('edit-ns-metodo-pagamento').value = nota.metodo_pagamento;
-    document.getElementById('edit-ns-status-pagamento').value = nota.status_pagamento;
-    
-    showNotification("Funcionalidade de edição de itens em desenvolvimento.", "info");
-    modal.style.display = 'block';
-}
-
 async function verDetalhesNotaEntrada(notaId) {
     const modal = document.getElementById('modal-ver-nota-entrada');
     const container = document.getElementById('detalhes-ne-conteudo');
