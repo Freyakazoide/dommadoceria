@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://bujffxasexuglgmtloxv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amZmeGFzZXh1Z2xnbXRsb3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTY1NDAsImV4cCI6MjA3MTEzMjU0MH0.OmbttnQ6ThFCYuspr3IL2b25RULx_ZqoXUfcoN7KF_M';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amZmeGFzZXh1Z2xnbXRsb3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTY1NDAsImV4cCI6MjA3MTEzMjU0MH0.OmbttnQ6ThFCYuspr3IL2b25RULx_ZqoXUfcoN7KF_M';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function showNotification(message, type = 'success') {
@@ -328,10 +328,13 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     document.querySelectorAll('.sub-nav-link').forEach(link => {
-        link.addEventListener('click', () => {
-            document.querySelectorAll('.sub-nav-link').forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-            document.querySelectorAll('.subtela').forEach(s => s.classList.add('hidden'));
+        link.addEventListener('click', (e) => {
+            const parentNav = e.target.closest('.sub-nav');
+            parentNav.querySelectorAll('.sub-nav-link').forEach(l => l.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            const parentTela = e.target.closest('.tela');
+            parentTela.querySelectorAll('.subtela').forEach(s => s.classList.add('hidden'));
             document.getElementById(link.dataset.target).classList.remove('hidden');
         });
     });
@@ -597,7 +600,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showNotification('Nota Fiscal salva com sucesso!');
             resetarFormularioNf();
             document.dispatchEvent(new CustomEvent('dadosAtualizados'));
-            document.querySelector('.sub-nav-link[data-target="subtela-historico-saida"]').click();
+            document.querySelector('#tela-notas-saida .sub-nav-link[data-target="subtela-historico-saida"]').click();
         }
     });
 
@@ -681,8 +684,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const dataNota = new Date(nf.created_at);
             dataNota.setHours(0,0,0,0);
-            const dataInicio = filtroDataInicio ? new Date(filtroDataInicio + 'T00:00:00') : null;
-            const dataFim = filtroDataFim ? new Date(filtroDataFim + 'T23:59:59') : null;
+            const dataInicio = filtroDataInicio ? new Date(filtroDataInicio + 'T00:00:00Z') : null;
+            const dataFim = filtroDataFim ? new Date(filtroDataFim + 'T23:59:59Z') : null;
 
             const atendeBusca = filtroBusca ? (buscaCliente || buscaId) : true;
             const atendeDataInicio = dataInicio ? dataNota >= dataInicio : true;
@@ -792,7 +795,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sortDirection = 'desc';
         displayNotasFiscais();
     });
-    document.querySelectorAll('th.sortable').forEach(th => {
+    document.querySelectorAll('#tela-notas-saida th.sortable').forEach(th => {
         th.addEventListener('click', () => {
             const newSortColumn = th.dataset.sort;
             if (sortColumn === newSortColumn) {
@@ -828,22 +831,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectClienteNf = document.getElementById('nf-cliente');
         const selectNeInsumo = document.getElementById('ne-insumo');
         const selectNeFornecedor = document.getElementById('ne-fornecedor');
+        const editNsCliente = document.getElementById('edit-ns-cliente');
+        const editNsProduto = document.getElementById('edit-ns-produto');
+
+        [selectInsumo, selectProdutoNf, selectClienteNf, selectNeInsumo, selectNeFornecedor, editNsCliente, editNsProduto].forEach(sel => sel.innerHTML = '');
         
         selectInsumo.innerHTML = '<option value="">Selecione...</option>';
         selectProdutoNf.innerHTML = '<option value="">Selecione um produto...</option>';
         selectClienteNf.innerHTML = '<option value="">Selecione um cliente...</option>';
         selectNeInsumo.innerHTML = '<option value="">Selecione um insumo...</option>';
         selectNeFornecedor.innerHTML = '<option value="">Selecione um fornecedor...</option>';
+        editNsCliente.innerHTML = '<option value="">Selecione um cliente...</option>';
+        editNsProduto.innerHTML = '<option value="">Selecione um produto...</option>';
         
         insumosData.forEach(i => {
             selectInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`;
             selectNeInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`;
         });
 
-        produtosData.filter(p => p.preco_venda > 0).forEach(p => selectProdutoNf.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`);
+        produtosData.filter(p => p.preco_venda > 0).forEach(p => {
+            selectProdutoNf.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`;
+            editNsProduto.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`;
+        });
         
         const clientes = contatosData.filter(c => parsePapeis(c.papeis).includes('Cliente'));
-        clientes.forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
+        clientes.forEach(c => {
+            selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`;
+            editNsCliente.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`;
+        });
 
         const fornecedores = contatosData.filter(c => parsePapeis(c.papeis).includes('Fornecedor'));
         fornecedores.forEach(f => selectNeFornecedor.innerHTML += `<option value="${f.id}">${f.nome_razao_social}</option>`);

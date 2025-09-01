@@ -1,4 +1,3 @@
-/* ---===[ 1. CONFIGURAÇÃO GLOBAL E FONTES ]===--- */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 :root {
@@ -7,7 +6,7 @@
     --cor-fundo-app: #f8f9fa;
     --cor-fundo-sidebar: #ffffff;
     --cor-fundo-conteudo: #ffffff;
-    --cor-superficie: #ffffff; /* <-- COR ADICIONADA AQUI */
+    --cor-superficie: #ffffff;
     --cor-texto: #212529;
     --cor-texto-suave: #6c757d;
     --cor-borda: #dee2e6;
@@ -27,7 +26,6 @@ body {
     margin: 0;
 }
 
-/* ---===[ 2. LAYOUT PRINCIPAL COM MENU LATERAL ]===--- */
 .app-container {
     display: grid;
     grid-template-columns: 260px 1fr;
@@ -47,8 +45,8 @@ body {
     overflow-y: auto;
 }
 
-.tela.hidden {
-    display: none;
+.tela.hidden, .subtela.hidden {
+    display: none !important;
 }
 
 hr {
@@ -57,7 +55,6 @@ hr {
     margin: 2rem 0;
 }
 
-/* ---===[ 3. MENU LATERAL (SIDEBAR) ]===--- */
 .sidebar-header {
     text-align: center;
     margin-bottom: 2.5rem;
@@ -112,7 +109,6 @@ hr {
     box-shadow: var(--sombra-suave);
 }
 
-/* ---===[ 4. ESTILO GERAL DE BOTÕES ]===--- */
 button, button[type="submit"] {
     background-color: var(--cor-principal);
     color: white;
@@ -141,7 +137,6 @@ button:hover, button[type="submit"]:hover {
 }
 .btn-secundario:hover { background-color: #5a6268; }
 
-/* ---===[ 5. FORMULÁRIOS MODERNOS ]===--- */
 form {
     margin-bottom: 1.5rem;
 }
@@ -166,6 +161,7 @@ label {
 input[type="text"],
 input[type="number"],
 input[type="email"],
+input[type="date"],
 select {
     width: 100%;
     padding: 0.75rem;
@@ -212,7 +208,6 @@ input[type="checkbox"], input[type="radio"] {
     accent-color: var(--cor-principal);
 }
 
-/* ---===[ 6. TABELAS ELEGANTES ]===--- */
 .tabela-bonita {
     width: 100%;
     border-collapse: collapse;
@@ -260,7 +255,6 @@ input[type="checkbox"], input[type="radio"] {
 .btn-acao.btn-danger { background-color: var(--cor-perigo); }
 .btn-acao.btn-info { background-color: var(--cor-info); }
 
-/* ---===[ 7. MODAIS ]===--- */
 .modal {
     display: none;
     position: fixed;
@@ -303,14 +297,13 @@ input[type="checkbox"], input[type="radio"] {
 }
 .close-button:hover { color: var(--cor-texto); }
 
-/* ---===[ 8. COMPONENTES ESPECÍFICOS ]===--- */
 .sub-nav { display: flex; gap: 0.5rem; border-bottom: 1px solid var(--cor-borda); margin-bottom: 1.5rem; }
 .sub-nav-link { padding: 0.75rem 1.25rem; border: none; background: none; cursor: pointer; font-weight: 500; color: var(--cor-texto-suave); border-bottom: 3px solid transparent; font-size: 1rem; font-family: 'Poppins', sans-serif; }
 .sub-nav-link.active { color: var(--cor-principal); border-bottom-color: var(--cor-principal); }
 
 .nota-fiscal-container { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
 .nota-fiscal-coluna { display: flex; flex-direction: column; }
-#nf-itens-container { background-color: var(--cor-fundo-app); padding: 1rem; border-radius: var(--raio-borda); flex-grow: 1; min-height: 200px; }
+#nf-itens-container, #ne-itens-container, #edit-ns-itens-container { background-color: var(--cor-fundo-app); padding: 1rem; border-radius: var(--raio-borda); flex-grow: 1; min-height: 200px; }
 .nf-item { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--cor-borda); }
 .nf-total { display: flex; justify-content: space-between; align-items: center; font-size: 1.5rem; font-weight: 700; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--cor-texto); }
 
@@ -333,70 +326,6 @@ input[type="checkbox"], input[type="radio"] {
 .custo-adicional-item input { margin-bottom: 0; }
 .custo-adicional-item .btn-remover-custo { width: 40px; height: 40px; padding: 0; background-color: var(--cor-perigo); }
 
-/* ---===[ 9. NOTIFICAÇÕES ]===--- */
-.notification-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 2000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 320px;
-}
-
-.notification {
-    padding: 1rem 1.5rem;
-    border-radius: var(--raio-borda);
-    color: white;
-    box-shadow: var(--sombra-media);
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    /* DURAÇÃO AUMENTADA AQUI */
-    animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 5.5s forwards;
-    opacity: 0;
-    font-weight: 500;
-}
-
-.notification.success {
-    background-color: var(--cor-sucesso);
-}
-
-.notification.error {
-    background-color: var(--cor-perigo);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes fadeOut {
-    from {
-        opacity: 1;
-    }
-    to {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-}
-
-@keyframes highlight-row {
-    0% { background-color: #fff3cd; }
-    100% { background-color: transparent; }
-}
-
-.highlight {
-    animation: highlight-row 2s ease-out;
-}
-
 .notification-container {
     position: fixed;
     top: 20px;
@@ -418,6 +347,30 @@ input[type="checkbox"], input[type="radio"] {
     gap: 1rem;
     font-weight: 500;
     animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 9.5s forwards;
+}
+
+.notification.success { background-color: var(--cor-sucesso); }
+.notification.error { background-color: var(--cor-perigo); }
+.notification.info { background-color: var(--cor-info); }
+
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; transform: translateY(10px); }
+}
+
+@keyframes highlight-row {
+    0% { background-color: #fff3cd; }
+    100% { background-color: transparent; }
+}
+
+.highlight {
+    animation: highlight-row 2s ease-out;
 }
 
 .historico-controles {
@@ -493,31 +446,4 @@ th.sortable:hover {
 th.sortable span {
     margin-left: 0.5rem;
     display: inline-block;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* ---===[ 11. CONTROLES DO HISTÓRICO E PAGINAÇÃO (NOVO) ]===--- */
-.historico-controles {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-    align-items: center;
-}
-
-.historico-controles input[type="text"] {
-    flex-grow: 1;
-}
-
-/* REGRA ADICIONADA PARA ESTILIZAR O FILTRO DE DATA */
-.historico-controles input[type="date"] {
-    height: 48px;
-    padding: 0.75rem;
-}
-
-.historico-controles button {
-    padding: 0.6rem 1rem;
-    background-color: var(--cor-texto-suave);
 }
