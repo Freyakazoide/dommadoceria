@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="app-container">
         <aside class="sidebar-menu">
             <div class="sidebar-header">
@@ -131,7 +130,6 @@
                     <button class="sub-nav-link active" data-target="subtela-nova-saida">Lançar Nova Nota</button>
                     <button class="sub-nav-link" data-target="subtela-historico-saida">Ver Histórico</button>
                 </div>
-
                 <div id="subtela-nova-saida" class="subtela">
                     <div class="nota-fiscal-container">
                         <div class="nota-fiscal-coluna">
@@ -165,7 +163,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="subtela-historico-saida" class="subtela hidden">
                     <div class="historico-controles">
                         <input type="text" id="filtro-busca" placeholder="Buscar por cliente, produto, ID...">
@@ -203,7 +200,52 @@
             
             <section id="tela-notas-entrada" class="tela hidden">
                 <h2>Notas de Entrada (Compras)</h2>
-                <p>Em breve: registre suas compras de insumos para controlar o estoque.</p>
+                <div class="sub-nav">
+                    <button class="sub-nav-link active" data-target="subtela-nova-entrada">Lançar Nova Compra</button>
+                    <button class="sub-nav-link" data-target="subtela-historico-entrada">Histórico de Compras</button>
+                </div>
+                <div id="subtela-nova-entrada" class="subtela">
+                    <div class="nota-fiscal-container">
+                        <div class="nota-fiscal-coluna">
+                            <h3>1. Dados da Compra</h3>
+                            <form id="form-dados-ne">
+                                <label for="ne-fornecedor">Fornecedor:</label>
+                                <select id="ne-fornecedor" required></select>
+                                <label for="ne-data">Data da Compra:</label>
+                                <input type="date" id="ne-data" required>
+                            </form>
+                            <hr>
+                            <h3>2. Adicionar Insumos</h3>
+                            <form id="form-add-ne-item">
+                                <label for="ne-insumo">Insumo:</label>
+                                <select id="ne-insumo" required></select>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label for="ne-quantidade">Quantidade:</label>
+                                        <input type="number" id="ne-quantidade" value="1" step="0.01" min="0.01" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ne-preco">Preço Unitário (R$):</label>
+                                        <input type="number" id="ne-preco" step="0.01" min="0.01" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn-secundario">+ Adicionar Insumo</button>
+                            </form>
+                        </div>
+                        <div class="nota-fiscal-coluna">
+                            <h3>Insumos da Nota</h3>
+                            <div id="ne-itens-container"><p class="placeholder">Adicione insumos à nota...</p></div>
+                            <div class="nf-total">
+                                <span>TOTAL:</span>
+                                <strong id="ne-valor-total">R$ 0.00</strong>
+                            </div>
+                            <button id="btn-salvar-ne">💾 Salvar Nota de Entrada</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="subtela-historico-entrada" class="subtela hidden">
+                    <p>Histórico de compras em breve.</p>
+                </div>
             </section>
         </main>
     </div>
@@ -307,11 +349,47 @@
             <div id="detalhes-nota-conteudo"></div>
         </div>
     </div>
+    <div id="modal-editar-nota-saida" class="modal modal-grande">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Editar Nota de Venda <span id="edit-ns-id"></span></h2>
+            <input type="hidden" id="edit-ns-hidden-id">
+            <div class="nota-fiscal-container">
+                <div class="nota-fiscal-coluna">
+                    <h3>1. Dados da Nota</h3>
+                    <form id="form-edit-dados-ns">
+                        <label for="edit-ns-cliente">Cliente:</label>
+                        <select id="edit-ns-cliente" required></select>
+                        <label for="edit-ns-metodo-pagamento">Método de Pagamento:</label>
+                        <select id="edit-ns-metodo-pagamento"><option>Pix</option><option>Dinheiro</option><option>Cartão de Débito</option><option>Cartão de Crédito</option></select>
+                        <label for="edit-ns-status-pagamento">Status do Pagamento:</label>
+                        <select id="edit-ns-status-pagamento"><option>Pago</option><option>Pendente</option></select>
+                    </form>
+                    <hr>
+                    <h3>2. Adicionar Produtos</h3>
+                    <form id="form-edit-add-ns-item">
+                        <label for="edit-ns-produto">Produto:</label>
+                        <select id="edit-ns-produto" required></select>
+                        <label for="edit-ns-quantidade">Quantidade:</label>
+                        <input type="number" id="edit-ns-quantidade" value="1" step="1" min="1" required>
+                        <button type="submit" class="btn-secundario">+ Adicionar</button>
+                    </form>
+                </div>
+                <div class="nota-fiscal-coluna">
+                    <h3>Itens da Nota</h3>
+                    <div id="edit-ns-itens-container"><p class="placeholder">Adicione produtos...</p></div>
+                    <div class="nf-total">
+                        <span>TOTAL:</span>
+                        <strong id="edit-ns-valor-total">R$ 0.00</strong>
+                    </div>
+                    <button id="btn-atualizar-ns">💾 Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="notification-container" class="notification-container"></div>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js" defer></script>
-
 </body>
 </html>

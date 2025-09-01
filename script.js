@@ -1,5 +1,5 @@
 const SUPABASE_URL = 'https://bujffxasexuglgmtloxv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amZmeGFzZXh1Z2xnbXRsb3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTY1NDAsImV4cCI6MjA3MTEzMjU0MH0.OmbttnQ6ThFCYuspr3IL2b25RULx_ZqoXUfcoN7KF_M';
+const SUPABASE_KEY = 'eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amZmeGFzZXh1Z2xnbXRsb3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTY1NDAsImV4cCI6MjA3MTEzMjU0MH0.OmbttnQ6ThFCYuspr3IL2b25RULx_ZqoXUfcoN7KF_M';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function showNotification(message, type = 'success') {
@@ -223,8 +223,28 @@ async function deletarNota(notaId) {
     }
 }
 
+async function editarNotaSaida(notaId) {
+    const modal = document.getElementById('modal-editar-nota-saida');
+    document.getElementById('edit-ns-hidden-id').value = notaId;
+    document.getElementById('edit-ns-id').textContent = `(#${notaId})`;
+
+    const { data: nota, error } = await supabaseClient.from('notas_fiscais').select(`*, contatos(id)`).eq('id', notaId).single();
+    if (error) return showNotification('Erro ao carregar dados da nota.', 'error');
+
+    const { data: itens, errorItens } = await supabaseClient.from('nota_fiscal_itens').select(`*, produtos(*)`).eq('nota_fiscal_id', notaId);
+    if (errorItens) return showNotification('Erro ao carregar itens da nota.', 'error');
+    
+    document.getElementById('edit-ns-cliente').value = nota.contatos.id;
+    document.getElementById('edit-ns-metodo-pagamento').value = nota.metodo_pagamento;
+    document.getElementById('edit-ns-status-pagamento').value = nota.status_pagamento;
+    
+    showNotification("Funcionalidade de edição de itens em desenvolvimento.", "info");
+    modal.style.display = 'block';
+}
+
 function atualizarLabelsFormularioContato(prefixo = '') {
     const radioName = prefixo ? 'edit_tipo_pessoa' : 'tipo_pessoa';
+    if (!document.querySelector(`input[name="${radioName}"]`)) return;
     const tipo = document.querySelector(`input[name="${radioName}"]:checked`).value;
     const labelNome = document.getElementById(`${prefixo}label-nome-contato`);
     const labelDocumento = document.getElementById(`${prefixo}label-documento-contato`);
@@ -250,7 +270,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let produtosData = [];
     let contatosData = [];
     let notasFiscaisData = [];
+    let notasEntradaData = [];
     let nfItens = [];
+    let neItens = [];
 
     let currentPage = 1;
     let rowsPerPage = 20;
@@ -269,6 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const formAddNfItem = document.getElementById('form-add-nf-item');
     const formDadosNf = document.getElementById('form-dados-nf');
     const btnSalvarNf = document.getElementById('btn-salvar-nf');
+    const formDadosNe = document.getElementById('form-dados-ne');
+    const formAddNeItem = document.getElementById('form-add-ne-item');
+    const btnSalvarNe = document.getElementById('btn-salvar-ne');
 
     function mostrarTela(targetId) {
         telas.forEach(tela => tela.classList.add('hidden'));
@@ -575,9 +600,75 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.sub-nav-link[data-target="subtela-historico-saida"]').click();
         }
     });
+
+    function renderizarItensNe() {
+        const container = document.getElementById('ne-itens-container');
+        container.innerHTML = '';
+        if (neItens.length === 0) {
+            container.innerHTML = '<p class="placeholder">Adicione insumos à nota...</p>';
+        } else {
+            neItens.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'nf-item';
+                itemDiv.innerHTML = `
+                    <span>${item.quantidade} x ${item.nome} (R$ ${item.preco_unitario_momento.toFixed(2)})</span>
+                    <strong>R$ ${(item.quantidade * item.preco_unitario_momento).toFixed(2)}</strong>
+                    <button type="button" class="btn-remover-ingrediente" onclick="removerItemNe(${index})">❌</button>
+                `;
+                container.appendChild(itemDiv);
+            });
+        }
+        const total = neItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
+        document.getElementById('ne-valor-total').textContent = `R$ ${total.toFixed(2)}`;
+    }
+
+    window.removerItemNe = function(index) {
+        neItens.splice(index, 1);
+        renderizarItensNe();
+    }
+    
+    function resetarFormularioNe() {
+        neItens = [];
+        renderizarItensNe();
+        formAddNeItem.reset();
+        formDadosNe.reset();
+        document.getElementById('ne-data').valueAsDate = new Date();
+    }
+
+    formAddNeItem.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const insumoId = document.getElementById('ne-insumo').value;
+        const preco = parseFloat(document.getElementById('ne-preco').value);
+
+        if (!insumoId || !preco || preco <= 0) {
+            return showNotification('Selecione um insumo e preencha um preço válido.', 'error');
+        }
+        
+        const insumoSelecionado = insumosData.find(i => i.id == insumoId);
+        
+        neItens.push({
+            insumo_id: parseInt(insumoId, 10),
+            nome: insumoSelecionado.nome,
+            quantidade: parseFloat(document.getElementById('ne-quantidade').value),
+            preco_unitario_momento: preco
+        });
+        renderizarItensNe();
+        formAddNeItem.reset();
+        document.getElementById('ne-insumo').focus();
+    });
+
+    btnSalvarNe.addEventListener('click', async () => {
+        if (neItens.length === 0) return showNotification('Adicione pelo menos um insumo à nota.', 'error');
+        const fornecedorId = document.getElementById('ne-fornecedor').value;
+        if (!fornecedorId) return showNotification('Selecione um fornecedor.', 'error');
+
+        showNotification("Funcionalidade de salvar Nota de Entrada em desenvolvimento.", "info");
+        resetarFormularioNe();
+    });
     
     function displayNotasFiscais() {
         const corpoTabela = document.getElementById('corpo-tabela-notas-saida');
+        if (!corpoTabela) return;
         corpoTabela.innerHTML = '';
 
         const filtroBusca = document.getElementById('filtro-busca').value.toLowerCase();
@@ -642,6 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><span class="status ${statusClass}">${nf.status_pagamento}</span></td>
                 <td class="actions-container">
                     <button class="btn-acao btn-info" title="Ver Detalhes" onclick="verDetalhesNota(${nf.id})">👁️</button>
+                    <button class="btn-acao btn-warning" title="Editar Nota" onclick="editarNotaSaida(${nf.id})">✏️</button>
                     ${nf.status_pagamento !== 'Pago' ? `<button class="btn-acao btn-success" title="Marcar como Pago" onclick="marcarComoPago(${nf.id})">✔️</button>` : ''}
                     <button class="btn-acao btn-danger" title="Deletar Nota" onclick="deletarNota(${nf.id})">🗑️</button>
                 </td>
@@ -653,6 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderizarPaginacao(totalItens) {
         const container = document.getElementById('paginacao-botoes');
         const infoContainer = document.getElementById('total-itens-info');
+        if (!container || !infoContainer) return;
         container.innerHTML = '';
         infoContainer.textContent = `(Total: ${totalItens})`;
 
@@ -673,9 +766,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function atualizarCabecalhoOrdenacao() {
         document.querySelectorAll('th.sortable').forEach(th => {
-            th.querySelector('span').textContent = '';
+            const span = th.querySelector('span');
+            if(!span) return;
+            span.textContent = '';
             if (th.dataset.sort === sortColumn) {
-                th.querySelector('span').textContent = sortDirection === 'asc' ? '▲' : '▼';
+                span.textContent = sortDirection === 'asc' ? '▲' : '▼';
             }
         });
     }
@@ -731,17 +826,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectInsumo = document.getElementById('select-insumo-receita');
         const selectProdutoNf = document.getElementById('nf-produto');
         const selectClienteNf = document.getElementById('nf-cliente');
+        const selectNeInsumo = document.getElementById('ne-insumo');
+        const selectNeFornecedor = document.getElementById('ne-fornecedor');
         
         selectInsumo.innerHTML = '<option value="">Selecione...</option>';
         selectProdutoNf.innerHTML = '<option value="">Selecione um produto...</option>';
         selectClienteNf.innerHTML = '<option value="">Selecione um cliente...</option>';
+        selectNeInsumo.innerHTML = '<option value="">Selecione um insumo...</option>';
+        selectNeFornecedor.innerHTML = '<option value="">Selecione um fornecedor...</option>';
         
-        insumosData.forEach(i => selectInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`);
+        insumosData.forEach(i => {
+            selectInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`;
+            selectNeInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`;
+        });
+
         produtosData.filter(p => p.preco_venda > 0).forEach(p => selectProdutoNf.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`);
         
-        const clientesFiltrados = contatosData.filter(c => parsePapeis(c.papeis).includes('Cliente'));
-        clientesFiltrados.forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
+        const clientes = contatosData.filter(c => parsePapeis(c.papeis).includes('Cliente'));
+        clientes.forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
+
+        const fornecedores = contatosData.filter(c => parsePapeis(c.papeis).includes('Fornecedor'));
+        fornecedores.forEach(f => selectNeFornecedor.innerHTML += `<option value="${f.id}">${f.nome_razao_social}</option>`);
         
+        document.getElementById('ne-data').valueAsDate = new Date();
         displayNotasFiscais();
     }
     
