@@ -128,9 +128,10 @@
             <section id="tela-notas-saida" class="tela hidden">
                 <h2>Notas de Saída (Vendas)</h2>
                 <div class="sub-nav">
-                    <button id="btn-tab-nova-saida" class="sub-nav-link active" data-target="subtela-nova-saida">Nova Nota de Saída</button>
-                    <button id="btn-tab-historico-saida" class="sub-nav-link" data-target="subtela-historico-saida">Histórico</button>
+                    <button class="sub-nav-link active" data-target="subtela-nova-saida">Lançar Nova Nota</button>
+                    <button class="sub-nav-link" data-target="subtela-historico-saida">Ver Histórico</button>
                 </div>
+
                 <div id="subtela-nova-saida" class="subtela">
                     <div class="nota-fiscal-container">
                         <div class="nota-fiscal-coluna">
@@ -139,17 +140,9 @@
                                 <label for="nf-cliente">Cliente:</label>
                                 <select id="nf-cliente" required></select>
                                 <label for="nf-metodo-pagamento">Método de Pagamento:</label>
-                                <select id="nf-metodo-pagamento">
-                                    <option>Pix</option>
-                                    <option>Dinheiro</option>
-                                    <option>Cartão de Débito</option>
-                                    <option>Cartão de Crédito</option>
-                                </select>
+                                <select id="nf-metodo-pagamento"><option>Pix</option><option>Dinheiro</option><option>Cartão de Débito</option><option>Cartão de Crédito</option></select>
                                 <label for="nf-status-pagamento">Status do Pagamento:</label>
-                                <select id="nf-status-pagamento">
-                                    <option>Pago</option>
-                                    <option>Pendente</option>
-                                </select>
+                                <select id="nf-status-pagamento"><option>Pago</option><option>Pendente</option></select>
                             </form>
                             <hr>
                             <h3>2. Adicionar Produtos</h3>
@@ -163,9 +156,7 @@
                         </div>
                         <div class="nota-fiscal-coluna">
                             <h3>Itens da Nota</h3>
-                            <div id="nf-itens-container">
-                                <p class="placeholder">Adicione produtos à nota...</p>
-                            </div>
+                            <div id="nf-itens-container"><p class="placeholder">Adicione produtos à nota...</p></div>
                             <div class="nf-total">
                                 <span>TOTAL:</span>
                                 <strong id="nf-valor-total">R$ 0.00</strong>
@@ -174,22 +165,42 @@
                         </div>
                     </div>
                 </div>
+
                 <div id="subtela-historico-saida" class="subtela hidden">
+                    <div class="historico-controles">
+                        <input type="text" id="filtro-busca" placeholder="Buscar por cliente, produto, ID...">
+                        <input type="date" id="filtro-data-inicio" title="Data de início">
+                        <input type="date" id="filtro-data-fim" title="Data de fim">
+                        <button id="btn-limpar-filtros">Limpar Filtros</button>
+                    </div>
                     <table class="tabela-bonita">
                         <thead>
                             <tr>
-                                <th>Data</th>
-                                <th>Cliente</th>
-                                <th>Valor</th>
-                                <th>Status</th>
+                                <th data-sort="created_at" class="sortable">Data <span></span></th>
+                                <th data-sort="cliente" class="sortable">Cliente <span></span></th>
+                                <th data-sort="valor_total" class="sortable">Valor <span></span></th>
+                                <th data-sort="status_pagamento" class="sortable">Status <span></span></th>
                                 <th style="text-align: right;">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="corpo-tabela-notas-saida"></tbody>
                     </table>
+                    <div class="paginacao-controles">
+                        <div class="paginacao-info">
+                            <label for="rows-per-page">Itens por página:</label>
+                            <select id="rows-per-page">
+                                <option value="10">10</option>
+                                <option value="20" selected>20</option>
+                                <option value="100">100</option>
+                                <option value="200">200</option>
+                            </select>
+                            <span id="total-itens-info"></span>
+                        </div>
+                        <div id="paginacao-botoes"></div>
+                    </div>
                 </div>
             </section>
-
+            
             <section id="tela-notas-entrada" class="tela hidden">
                 <h2>Notas de Entrada (Compras)</h2>
                 <p>Em breve: registre suas compras de insumos para controlar o estoque.</p>

@@ -2,7 +2,6 @@ const SUPABASE_URL = 'https://bujffxasexuglgmtloxv.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amZmeGFzZXh1Z2xnbXRsb3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTY1NDAsImV4cCI6MjA3MTEzMjU0MH0.OmbttnQ6ThFCYuspr3IL2b25RULx_ZqoXUfcoN7KF_M';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ---===[ SISTEMA DE NOTIFICAÇÃO ]===---
 function showNotification(message, type = 'success') {
     const container = document.getElementById('notification-container');
     const notification = document.createElement('div');
@@ -11,10 +10,9 @@ function showNotification(message, type = 'success') {
     container.appendChild(notification);
     setTimeout(() => {
         notification.remove();
-    }, 8000); // Duração aumentada para 6 segundos
+    }, 10000);
 }
 
-// ---===[ FUNÇÕES GERAIS ]===---
 function parsePapeis(papeis) {
     if (typeof papeis === 'string') {
         try {
@@ -26,8 +24,7 @@ function parsePapeis(papeis) {
     return Array.isArray(papeis) ? papeis : [];
 }
 
-// ... (todas as outras funções como editarInsumo, deletarInsumo, etc. permanecem as mesmas) ...
-async function editarInsumo(id, nome, unidade, preco) {
+function editarInsumo(id, nome, unidade, preco) {
     const modal = document.getElementById('modal-editar-insumo');
     document.getElementById('edit-insumo-id').value = id;
     document.getElementById('edit-nome-insumo').value = nome;
@@ -220,7 +217,10 @@ async function deletarNota(notaId) {
     await supabaseClient.from('nota_fiscal_itens').delete().match({ nota_fiscal_id: notaId });
     const { error } = await supabaseClient.from('notas_fiscais').delete().match({ id: notaId });
     if (error) { showNotification('Erro ao deletar a nota fiscal.', 'error'); }
-    else { showNotification('Nota fiscal deletada com sucesso.'); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
+    else { 
+        showNotification('Nota fiscal deletada com sucesso.'); 
+        document.dispatchEvent(new CustomEvent('dadosAtualizados'));
+    }
 }
 
 function atualizarLabelsFormularioContato(prefixo = '') {
@@ -249,7 +249,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let insumosData = [];
     let produtosData = [];
     let contatosData = [];
+    let notasFiscaisData = [];
     let nfItens = [];
+
+    let currentPage = 1;
+    let rowsPerPage = 20;
+    let sortColumn = 'created_at';
+    let sortDirection = 'desc';
 
     const navLinks = document.querySelectorAll('.nav-link');
     const telas = document.querySelectorAll('.main-content .tela');
@@ -308,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderizarTabelaInsumos() {
         const corpoTabela = document.getElementById('corpo-tabela-insumos');
         corpoTabela.innerHTML = '';
-        if (insumosData.length === 0) {
+        if (!insumosData || insumosData.length === 0) {
             corpoTabela.innerHTML = '<tr><td colspan="4">Nenhum insumo cadastrado.</td></tr>';
             return;
         }
@@ -354,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderizarTabelaProdutos() {
         const corpoTabela = document.getElementById('corpo-tabela-produtos');
         corpoTabela.innerHTML = '';
-        if (produtosData.length === 0) {
+        if (!produtosData || produtosData.length === 0) {
             corpoTabela.innerHTML = '<tr><td colspan="3">Nenhum produto cadastrado.</td></tr>';
             return;
         }
@@ -411,7 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderizarTabelaContatos() {
         const corpoTabela = document.getElementById('corpo-tabela-contatos');
         corpoTabela.innerHTML = '';
-        if (contatosData.length === 0) {
+        if (!contatosData || contatosData.length === 0) {
             corpoTabela.innerHTML = '<tr><td colspan="4">Nenhum contato cadastrado.</td></tr>';
             return;
         }
@@ -491,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemDiv.innerHTML = `
                     <span>${item.quantidade}x ${item.nome}</span>
                     <strong>R$ ${(item.quantidade * item.preco_unitario_momento).toFixed(2)}</strong>
-                    <button class="btn-remover-ingrediente" onclick="removerItemNf(${index})">❌</button>
+                    <button type="button" class="btn-remover-ingrediente" onclick="removerItemNf(${index})">❌</button>
                 `;
                 container.appendChild(itemDiv);
             });
@@ -518,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!produtoId) return showNotification('Selecione um produto.', 'error');
 
         const produtoSelecionado = produtosData.find(p => p.id == produtoId);
-        if (!produtoSelecionado.preco_venda) return showNotification('Este produto não foi precificado. Defina um preço na tela de Produtos.', 'error');
+        if (!produtoSelecionado.preco_venda) return showNotification('Este produto não foi precificado.', 'error');
         
         nfItens.push({
             produto_id: parseInt(produtoId, 10),
@@ -539,7 +545,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const valorTotal = nfItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
         
         const { data: notaFiscal, error } = await supabaseClient.from('notas_fiscais').insert([{
-            // CORREÇÃO CRÍTICA: Converter ID do cliente para número
             cliente_id: parseInt(clienteId, 10),
             valor_total: valorTotal,
             status_pagamento: document.getElementById('nf-status-pagamento').value,
@@ -566,25 +571,69 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             showNotification('Nota Fiscal salva com sucesso!');
             resetarFormularioNf();
-            document.dispatchEvent(new CustomEvent('dadosAtualizados', { detail: { highlightedId: notaFiscal.id } }));
-            
-            document.getElementById('btn-tab-historico-saida').click();
+            document.dispatchEvent(new CustomEvent('dadosAtualizados'));
+            document.querySelector('.sub-nav-link[data-target="subtela-historico-saida"]').click();
         }
     });
-
-    async function renderizarTabelaNotasFiscais(highlightedId = null) {
-        const { data, error } = await supabaseClient.from('notas_fiscais').select(`id, created_at, valor_total, status_pagamento, contatos(nome_razao_social)`).order('created_at', { ascending: false });
+    
+    function displayNotasFiscais() {
         const corpoTabela = document.getElementById('corpo-tabela-notas-saida');
         corpoTabela.innerHTML = '';
-        if (error || !data || data.length === 0) {
-            corpoTabela.innerHTML = '<tr><td colspan="5">Nenhuma nota fiscal emitida.</td></tr>';
-            return;
-        }
-        data.forEach(nf => {
-            const tr = document.createElement('tr');
-            if (nf.id === highlightedId) {
-                tr.classList.add('highlight');
+
+        const filtroBusca = document.getElementById('filtro-busca').value.toLowerCase();
+        const filtroDataInicio = document.getElementById('filtro-data-inicio').value;
+        const filtroDataFim = document.getElementById('filtro-data-fim').value;
+
+        const filteredData = notasFiscaisData.filter(nf => {
+            const buscaCliente = nf.contatos?.nome_razao_social.toLowerCase().includes(filtroBusca);
+            const buscaId = nf.id.toString().includes(filtroBusca);
+            
+            const dataNota = new Date(nf.created_at);
+            dataNota.setHours(0,0,0,0);
+            const dataInicio = filtroDataInicio ? new Date(filtroDataInicio + 'T00:00:00') : null;
+            const dataFim = filtroDataFim ? new Date(filtroDataFim + 'T23:59:59') : null;
+
+            const atendeBusca = filtroBusca ? (buscaCliente || buscaId) : true;
+            const atendeDataInicio = dataInicio ? dataNota >= dataInicio : true;
+            const atendeDataFim = dataFim ? dataNota <= dataFim : true;
+
+            return atendeBusca && atendeDataInicio && atendeDataFim;
+        });
+
+        filteredData.sort((a, b) => {
+            let valA, valB;
+            if (sortColumn === 'cliente') {
+                valA = a.contatos?.nome_razao_social.toLowerCase() || '';
+                valB = b.contatos?.nome_razao_social.toLowerCase() || '';
+            } else {
+                valA = a[sortColumn];
+                valB = b[sortColumn];
             }
+            
+            if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        const startIndex = (currentPage - 1) * rowsPerPage;
+        const endIndex = startIndex + rowsPerPage;
+        const paginatedData = filteredData.slice(startIndex, endIndex);
+
+        if (paginatedData.length === 0) {
+            corpoTabela.innerHTML = '<tr><td colspan="5">Nenhuma nota fiscal encontrada com os filtros atuais.</td></tr>';
+        } else {
+            renderizarTabelaNotasFiscais(paginatedData);
+        }
+
+        renderizarPaginacao(filteredData.length);
+        atualizarCabecalhoOrdenacao();
+    }
+
+    function renderizarTabelaNotasFiscais(notas) {
+        const corpoTabela = document.getElementById('corpo-tabela-notas-saida');
+        corpoTabela.innerHTML = ''; 
+        notas.forEach(nf => {
+            const tr = document.createElement('tr');
             const statusClass = nf.status_pagamento === 'Pago' ? 'status-pago' : 'status-pendente';
             tr.innerHTML = `
                 <td>${new Date(nf.created_at).toLocaleDateString('pt-BR')}</td>
@@ -600,19 +649,80 @@ document.addEventListener('DOMContentLoaded', () => {
             corpoTabela.appendChild(tr);
         });
     }
-    
-    async function atualizarTodosOsDados(event) {
-        const highlightedId = event?.detail?.highlightedId;
 
-        const [insumosResult, produtosResult, contatosResult] = await Promise.all([
+    function renderizarPaginacao(totalItens) {
+        const container = document.getElementById('paginacao-botoes');
+        const infoContainer = document.getElementById('total-itens-info');
+        container.innerHTML = '';
+        infoContainer.textContent = `(Total: ${totalItens})`;
+
+        const totalPages = Math.ceil(totalItens / rowsPerPage);
+        if (totalPages <= 1) return;
+
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement('button');
+            button.textContent = i;
+            if (i === currentPage) button.classList.add('active');
+            button.addEventListener('click', () => {
+                currentPage = i;
+                displayNotasFiscais();
+            });
+            container.appendChild(button);
+        }
+    }
+    
+    function atualizarCabecalhoOrdenacao() {
+        document.querySelectorAll('th.sortable').forEach(th => {
+            th.querySelector('span').textContent = '';
+            if (th.dataset.sort === sortColumn) {
+                th.querySelector('span').textContent = sortDirection === 'asc' ? '▲' : '▼';
+            }
+        });
+    }
+
+    document.getElementById('filtro-busca').addEventListener('input', () => { currentPage = 1; displayNotasFiscais(); });
+    document.getElementById('filtro-data-inicio').addEventListener('change', () => { currentPage = 1; displayNotasFiscais(); });
+    document.getElementById('filtro-data-fim').addEventListener('change', () => { currentPage = 1; displayNotasFiscais(); });
+    document.getElementById('rows-per-page').addEventListener('change', (e) => {
+        currentPage = 1;
+        rowsPerPage = parseInt(e.target.value, 10);
+        displayNotasFiscais();
+    });
+    document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
+        document.getElementById('filtro-busca').value = '';
+        document.getElementById('filtro-data-inicio').value = '';
+        document.getElementById('filtro-data-fim').value = '';
+        currentPage = 1;
+        sortColumn = 'created_at';
+        sortDirection = 'desc';
+        displayNotasFiscais();
+    });
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const newSortColumn = th.dataset.sort;
+            if (sortColumn === newSortColumn) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = newSortColumn;
+                sortDirection = 'asc';
+            }
+            currentPage = 1;
+            displayNotasFiscais();
+        });
+    });
+
+    async function atualizarTodosOsDados() {
+        const [insumosResult, produtosResult, contatosResult, notasResult] = await Promise.all([
             supabaseClient.from('insumos').select('*').order('nome'),
             supabaseClient.from('produtos').select('*').order('nome'),
-            supabaseClient.from('contatos').select('*').order('nome_razao_social')
+            supabaseClient.from('contatos').select('*').order('nome_razao_social'),
+            supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`)
         ]);
         
         insumosData = insumosResult.data || [];
         produtosData = produtosResult.data || [];
         contatosData = contatosResult.data || [];
+        notasFiscaisData = notasResult.data || [];
         
         renderizarTabelaInsumos();
         renderizarTabelaProdutos();
@@ -632,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const clientesFiltrados = contatosData.filter(c => parsePapeis(c.papeis).includes('Cliente'));
         clientesFiltrados.forEach(c => selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`);
         
-        await renderizarTabelaNotasFiscais(highlightedId);
+        displayNotasFiscais();
     }
     
     document.addEventListener('dadosAtualizados', atualizarTodosOsDados);

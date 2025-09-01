@@ -388,7 +388,6 @@ input[type="checkbox"], input[type="radio"] {
     }
 }
 
-/* ---===[ 10. EFEITOS DE UI ]===--- */
 @keyframes highlight-row {
     0% { background-color: #fff3cd; }
     100% { background-color: transparent; }
@@ -396,4 +395,106 @@ input[type="checkbox"], input[type="radio"] {
 
 .highlight {
     animation: highlight-row 2s ease-out;
+}
+
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 320px;
+}
+
+.notification {
+    padding: 1rem 1.5rem;
+    border-radius: var(--raio-borda);
+    color: white;
+    box-shadow: var(--sombra-media);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-weight: 500;
+    animation: slideIn 0.3s ease-out, fadeOut 0.5s ease-in 9.5s forwards;
+}
+
+.historico-controles {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+.historico-controles input[type="text"] {
+    flex-grow: 1;
+}
+
+.historico-controles button {
+    padding: 0.6rem 1rem;
+    background-color: var(--cor-texto-suave);
+}
+
+.paginacao-controles {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cor-borda);
+}
+
+.paginacao-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--cor-texto-suave);
+}
+
+.paginacao-info select {
+    width: auto;
+    height: auto;
+    padding: 0.25rem 0.5rem;
+}
+
+#paginacao-botoes button {
+    background: none;
+    border: 1px solid var(--cor-borda);
+    color: var(--cor-principal);
+    padding: 0.5rem 1rem;
+    margin-left: 0.25rem;
+}
+
+#paginacao-botoes button:hover {
+    background-color: #fdeaf5;
+    transform: none;
+    box-shadow: none;
+}
+
+#paginacao-botoes button.active {
+    background-color: var(--cor-principal);
+    color: white;
+    border-color: var(--cor-principal);
+}
+
+#paginacao-botoes button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+th.sortable:hover {
+    background-color: #c22b70;
+}
+th.sortable span {
+    margin-left: 0.5rem;
+    display: inline-block;
+}
+
+.hidden {
+    display: none !important;
 }
