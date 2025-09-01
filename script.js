@@ -288,7 +288,6 @@ async function deletarNotaEntrada(notaId) {
     }
 }
 
-
 function atualizarLabelsFormularioContato(prefixo = '') {
     const radioName = prefixo ? 'edit_tipo_pessoa' : 'tipo_pessoa';
     if (!document.querySelector(`input[name="${radioName}"]`)) return;
