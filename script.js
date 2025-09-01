@@ -278,11 +278,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let rowsPerPage = 20;
     let sortColumn = 'created_at';
     let sortDirection = 'desc';
-
-let currentPageEntrada = 1;
-let rowsPerPageEntrada = 20;
-let sortColumnEntrada = 'data_compra';
-let sortDirectionEntrada = 'desc';
+    
+    let currentPageEntrada = 1;
+    let rowsPerPageEntrada = 20;
+    let sortColumnEntrada = 'data_compra';
+    let sortDirectionEntrada = 'desc';
 
     const navLinks = document.querySelectorAll('.nav-link');
     const telas = document.querySelectorAll('.main-content .tela');
@@ -665,46 +665,44 @@ let sortDirectionEntrada = 'desc';
         document.getElementById('ne-insumo').focus();
     });
 
-btnSalvarNe.addEventListener('click', async () => {
-    if (neItens.length === 0) return showNotification('Adicione pelo menos um insumo à nota.', 'error');
-    const fornecedorId = document.getElementById('ne-fornecedor').value;
-    const dataCompra = document.getElementById('ne-data').value;
-    if (!fornecedorId || !dataCompra) return showNotification('Selecione um fornecedor e uma data.', 'error');
+    btnSalvarNe.addEventListener('click', async () => {
+        if (neItens.length === 0) return showNotification('Adicione pelo menos um insumo à nota.', 'error');
+        const fornecedorId = document.getElementById('ne-fornecedor').value;
+        const dataCompra = document.getElementById('ne-data').value;
+        if (!fornecedorId || !dataCompra) return showNotification('Selecione um fornecedor e uma data.', 'error');
 
-    const valorTotal = neItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
+        const valorTotal = neItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
 
-    // 1. Salva a "capa" da nota de entrada
-    const { data: notaEntrada, error } = await supabaseClient.from('notas_entrada').insert([{
-        fornecedor_id: parseInt(fornecedorId, 10),
-        data_compra: dataCompra,
-        valor_total: valorTotal
-    }]).select().single();
+        const { data: notaEntrada, error } = await supabaseClient.from('notas_entrada').insert([{
+            fornecedor_id: parseInt(fornecedorId, 10),
+            data_compra: dataCompra,
+            valor_total: valorTotal
+        }]).select().single();
 
-    if (error) {
-        console.error('Erro ao salvar nota de entrada:', error);
-        return showNotification('Erro ao salvar a nota de compra.', 'error');
-    }
+        if (error) {
+            console.error('Erro ao salvar nota de entrada:', error);
+            return showNotification('Erro ao salvar a nota de compra.', 'error');
+        }
 
-    // 2. Associa os itens à nota que acabamos de criar
-    const itensParaSalvar = neItens.map(item => ({
-        nota_entrada_id: notaEntrada.id,
-        insumo_id: item.insumo_id,
-        quantidade: item.quantidade,
-        preco_unitario_momento: item.preco_unitario_momento
-    }));
+        const itensParaSalvar = neItens.map(item => ({
+            nota_entrada_id: notaEntrada.id,
+            insumo_id: item.insumo_id,
+            quantidade: item.quantidade,
+            preco_unitario_momento: item.preco_unitario_momento
+        }));
 
-    const { error: errorItens } = await supabaseClient.from('nota_entrada_itens').insert(itensParaSalvar);
+        const { error: errorItens } = await supabaseClient.from('nota_entrada_itens').insert(itensParaSalvar);
 
-    if (errorItens) {
-        console.error('Erro ao salvar itens da nota de entrada:', errorItens);
-        showNotification('Erro ao salvar os insumos da nota. A nota principal foi criada mas está vazia.', 'error');
-    } else {
-        showNotification('Nota de Compra salva com sucesso!');
-        resetarFormularioNe();
-        document.dispatchEvent(new CustomEvent('dadosAtualizados'));
-        // Futuramente, podemos redirecionar para o histórico de compras
-    }
-});
+        if (errorItens) {
+            console.error('Erro ao salvar itens da nota de entrada:', errorItens);
+            showNotification('Erro ao salvar os insumos da nota. A nota principal foi criada mas está vazia.', 'error');
+        } else {
+            showNotification('Nota de Compra salva com sucesso!');
+            resetarFormularioNe();
+            document.dispatchEvent(new CustomEvent('dadosAtualizados'));
+            document.querySelector('#tela-notas-entrada .sub-nav-link[data-target="subtela-historico-entrada"]').click();
+        }
+    });
     
     function displayNotasFiscais() {
         const corpoTabela = document.getElementById('corpo-tabela-notas-saida');
@@ -805,7 +803,7 @@ btnSalvarNe.addEventListener('click', async () => {
     }
     
     function atualizarCabecalhoOrdenacao() {
-        document.querySelectorAll('th.sortable').forEach(th => {
+        document.querySelectorAll('#tela-notas-saida th.sortable').forEach(th => {
             const span = th.querySelector('span');
             if(!span) return;
             span.textContent = '';
@@ -847,207 +845,217 @@ btnSalvarNe.addEventListener('click', async () => {
     });
 
     async function atualizarTodosOsDados() {
-const [insumosResult, produtosResult, contatosResult, notasSaidaResult, notasEntradaResult] = await Promise.all([
-        supabaseClient.from('insumos').select('*').order('nome'),
-        supabaseClient.from('produtos').select('*').order('nome'),
-        supabaseClient.from('contatos').select('*').order('nome_razao_social'),
-        supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`),
-        supabaseClient.from('notas_entrada').select(`*, contatos(nome_razao_social)`) 
-    ]);
+        const [insumosResult, produtosResult, contatosResult, notasSaidaResult, notasEntradaResult] = await Promise.all([
+            supabaseClient.from('insumos').select('*').order('nome'),
+            supabaseClient.from('produtos').select('*').order('nome'),
+            supabaseClient.from('contatos').select('*').order('nome_razao_social'),
+            supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`),
+            supabaseClient.from('notas_entrada').select(`*, contatos!notas_entrada_fornecedor_id_fkey(nome_razao_social)`)
+        ]);
         
         insumosData = insumosResult.data || [];
         produtosData = produtosResult.data || [];
         contatosData = contatosResult.data || [];
-        notasFiscaisData = notasResult.data || [];
+        notasFiscaisData = notasSaidaResult.data || [];
         notasEntradaData = notasEntradaResult.data || [];
-
-
+        
         renderizarTabelaInsumos();
         renderizarTabelaProdutos();
         renderizarTabelaContatos();
         
-        const selectInsumo = document.getElementById('select-insumo-receita');
-        const selectProdutoNf = document.getElementById('nf-produto');
-        const selectClienteNf = document.getElementById('nf-cliente');
-        const selectNeInsumo = document.getElementById('ne-insumo');
-        const selectNeFornecedor = document.getElementById('ne-fornecedor');
-        const editNsCliente = document.getElementById('edit-ns-cliente');
-        const editNsProduto = document.getElementById('edit-ns-produto');
-
-        [selectInsumo, selectProdutoNf, selectClienteNf, selectNeInsumo, selectNeFornecedor, editNsCliente, editNsProduto].forEach(sel => sel.innerHTML = '');
+        const selectors = [
+            document.getElementById('select-insumo-receita'), document.getElementById('nf-produto'),
+            document.getElementById('nf-cliente'), document.getElementById('ne-insumo'),
+            document.getElementById('ne-fornecedor'), document.getElementById('edit-ns-cliente'),
+            document.getElementById('edit-ns-produto')
+        ];
         
-        selectInsumo.innerHTML = '<option value="">Selecione...</option>';
-        selectProdutoNf.innerHTML = '<option value="">Selecione um produto...</option>';
-        selectClienteNf.innerHTML = '<option value="">Selecione um cliente...</option>';
-        selectNeInsumo.innerHTML = '<option value="">Selecione um insumo...</option>';
-        selectNeFornecedor.innerHTML = '<option value="">Selecione um fornecedor...</option>';
-        editNsCliente.innerHTML = '<option value="">Selecione um cliente...</option>';
-        editNsProduto.innerHTML = '<option value="">Selecione um produto...</option>';
+        selectors.forEach(sel => { if(sel) sel.innerHTML = ''; });
+        
+        const optionTemplates = {
+            insumo: '<option value="">Selecione...</option>',
+            produto: '<option value="">Selecione um produto...</option>',
+            cliente: '<option value="">Selecione um cliente...</option>',
+            fornecedor: '<option value="">Selecione um fornecedor...</option>'
+        };
+
+        selectors[0].innerHTML = optionTemplates.insumo;
+        selectors[1].innerHTML = optionTemplates.produto;
+        selectors[2].innerHTML = optionTemplates.cliente;
+        selectors[3].innerHTML = optionTemplates.insumo;
+        selectors[4].innerHTML = optionTemplates.fornecedor;
+        selectors[5].innerHTML = optionTemplates.cliente;
+        selectors[6].innerHTML = optionTemplates.produto;
         
         insumosData.forEach(i => {
-            selectInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`;
-            selectNeInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`;
+            selectors[0].innerHTML += `<option value="${i.id}">${i.nome}</option>`;
+            selectors[3].innerHTML += `<option value="${i.id}">${i.nome}</option>`;
         });
 
         produtosData.filter(p => p.preco_venda > 0).forEach(p => {
-            selectProdutoNf.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`;
-            editNsProduto.innerHTML += `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`;
+            const option = `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`;
+            selectors[1].innerHTML += option;
+            selectors[6].innerHTML += option;
         });
         
         const clientes = contatosData.filter(c => parsePapeis(c.papeis).includes('Cliente'));
         clientes.forEach(c => {
-            selectClienteNf.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`;
-            editNsCliente.innerHTML += `<option value="${c.id}">${c.nome_razao_social}</option>`;
+            const option = `<option value="${c.id}">${c.nome_razao_social}</option>`;
+            selectors[2].innerHTML += option;
+            selectors[5].innerHTML += option;
         });
 
         const fornecedores = contatosData.filter(c => parsePapeis(c.papeis).includes('Fornecedor'));
-        fornecedores.forEach(f => selectNeFornecedor.innerHTML += `<option value="${f.id}">${f.nome_razao_social}</option>`);
+        fornecedores.forEach(f => {
+            selectors[4].innerHTML += `<option value="${f.id}">${f.nome_razao_social}</option>`;
+        });
         
         document.getElementById('ne-data').valueAsDate = new Date();
+        
         displayNotasFiscais();
-         displayNotasEntrada();
+        displayNotasEntrada();
     }
     
-    function displayNotasEntrada() {
-    const corpoTabela = document.getElementById('corpo-tabela-notas-entrada');
-    if (!corpoTabela) return;
-    corpoTabela.innerHTML = '';
-
-    const filtroBusca = document.getElementById('filtro-busca-entrada').value.toLowerCase();
-    const filtroDataInicio = document.getElementById('filtro-data-inicio-entrada').value;
-    const filtroDataFim = document.getElementById('filtro-data-fim-entrada').value;
-
-    const filteredData = notasEntradaData.filter(ne => {
-        const buscaFornecedor = ne.contatos?.nome_razao_social.toLowerCase().includes(filtroBusca);
-        const buscaId = ne.id.toString().includes(filtroBusca);
-
-        const dataNota = new Date(ne.data_compra + 'T00:00:00Z');
-        const dataInicio = filtroDataInicio ? new Date(filtroDataInicio + 'T00:00:00Z') : null;
-        const dataFim = filtroDataFim ? new Date(filtroDataFim + 'T23:59:59Z') : null;
-
-        const atendeBusca = filtroBusca ? (buscaFornecedor || buscaId) : true;
-        const atendeDataInicio = dataInicio ? dataNota >= dataInicio : true;
-        const atendeDataFim = dataFim ? dataNota <= dataFim : true;
-
-        return atendeBusca && atendeDataInicio && atendeDataFim;
-    });
-
-    filteredData.sort((a, b) => {
-        let valA, valB;
-        if (sortColumnEntrada === 'fornecedor') {
-            valA = a.contatos?.nome_razao_social.toLowerCase() || '';
-            valB = b.contatos?.nome_razao_social.toLowerCase() || '';
-        } else {
-            valA = a[sortColumnEntrada];
-            valB = b[sortColumnEntrada];
-        }
-
-        if (valA < valB) return sortDirectionEntrada === 'asc' ? -1 : 1;
-        if (valA > valB) return sortDirectionEntrada === 'asc' ? 1 : -1;
-        return 0;
-    });
-
-    const startIndex = (currentPageEntrada - 1) * rowsPerPageEntrada;
-    const endIndex = startIndex + rowsPerPageEntrada;
-    const paginatedData = filteredData.slice(startIndex, endIndex);
-
-    if (paginatedData.length === 0) {
-        corpoTabela.innerHTML = '<tr><td colspan="4">Nenhuma nota de compra encontrada.</td></tr>';
-    } else {
-        renderizarTabelaNotasEntrada(paginatedData);
-    }
-
-    renderizarPaginacaoEntrada(filteredData.length);
-    atualizarCabecalhoOrdenacaoEntrada();
-}
-
-function renderizarTabelaNotasEntrada(notas) {
-    const corpoTabela = document.getElementById('corpo-tabela-notas-entrada');
-    corpoTabela.innerHTML = ''; 
-    notas.forEach(ne => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${new Date(ne.data_compra + 'T00:00:00Z').toLocaleDateString('pt-BR')}</td>
-            <td>${ne.contatos ? ne.contatos.nome_razao_social : 'Fornecedor removido'}</td>
-            <td>R$ ${Number(ne.valor_total).toFixed(2)}</td>
-            <td class="actions-container">
-                <button class="btn-acao btn-info" title="Ver Detalhes">👁️</button>
-                <button class="btn-acao btn-warning" title="Editar Nota">✏️</button>
-                <button class="btn-acao btn-danger" title="Deletar Nota">🗑️</button>
-            </td>
-        `;
-        corpoTabela.appendChild(tr);
-    });
-}
-
-function renderizarPaginacaoEntrada(totalItens) {
-    const container = document.getElementById('paginacao-botoes-entrada');
-    const infoContainer = document.getElementById('total-itens-info-entrada');
-    if (!container || !infoContainer) return;
-    container.innerHTML = '';
-    infoContainer.textContent = `(Total: ${totalItens})`;
-
-    const totalPages = Math.ceil(totalItens / rowsPerPageEntrada);
-    if (totalPages <= 1) return;
-
-    for (let i = 1; i <= totalPages; i++) {
-        const button = document.createElement('button');
-        button.textContent = i;
-        if (i === currentPageEntrada) button.classList.add('active');
-        button.addEventListener('click', () => {
-            currentPageEntrada = i;
-            displayNotasEntrada();
-        });
-        container.appendChild(button);
-    }
-}
-
-function atualizarCabecalhoOrdenacaoEntrada() {
-    document.querySelectorAll('#subtela-historico-entrada th.sortable').forEach(th => {
-        const span = th.querySelector('span');
-        if(!span) return;
-        span.textContent = '';
-        if (th.dataset.sortEntrada === sortColumnEntrada) {
-            span.textContent = sortDirectionEntrada === 'asc' ? '▲' : '▼';
-        }
-    });
-}
-
-document.getElementById('filtro-busca-entrada').addEventListener('input', () => { currentPageEntrada = 1; displayNotasEntrada(); });
-document.getElementById('filtro-data-inicio-entrada').addEventListener('change', () => { currentPageEntrada = 1; displayNotasEntrada(); });
-document.getElementById('filtro-data-fim-entrada').addEventListener('change', () => { currentPageEntrada = 1; displayNotasEntrada(); });
-document.getElementById('rows-per-page-entrada').addEventListener('change', (e) => {
-    currentPageEntrada = 1;
-    rowsPerPageEntrada = parseInt(e.target.value, 10);
-    displayNotasEntrada();
-});
-document.getElementById('btn-limpar-filtros-entrada').addEventListener('click', () => {
-    document.getElementById('filtro-busca-entrada').value = '';
-    document.getElementById('filtro-data-inicio-entrada').value = '';
-    document.getElementById('filtro-data-fim-entrada').value = '';
-    currentPageEntrada = 1;
-    sortColumnEntrada = 'data_compra';
-    sortDirectionEntrada = 'desc';
-    displayNotasEntrada();
-});
-document.querySelectorAll('#subtela-historico-entrada th.sortable').forEach(th => {
-    th.addEventListener('click', () => {
-        const newSortColumn = th.dataset.sortEntrada;
-        if (sortColumnEntrada === newSortColumn) {
-            sortDirectionEntrada = sortDirectionEntrada === 'asc' ? 'desc' : 'asc';
-        } else {
-            sortColumnEntrada = newSortColumn;
-            sortDirectionEntrada = 'asc';
-        }
-        currentPageEntrada = 1;
-        displayNotasEntrada();
-    });
-});
-
-
     document.addEventListener('dadosAtualizados', atualizarTodosOsDados);
     
     mostrarTela('tela-dashboard');
     atualizarTodosOsDados();
     atualizarLabelsFormularioContato();
+
+    // Funções do Histórico de Compras
+    function displayNotasEntrada() {
+        const corpoTabela = document.getElementById('corpo-tabela-notas-entrada');
+        if (!corpoTabela) return;
+        corpoTabela.innerHTML = '';
+
+        const filtroBusca = document.getElementById('filtro-busca-entrada').value.toLowerCase();
+        const filtroDataInicio = document.getElementById('filtro-data-inicio-entrada').value;
+        const filtroDataFim = document.getElementById('filtro-data-fim-entrada').value;
+
+        const filteredData = notasEntradaData.filter(ne => {
+            const buscaFornecedor = ne.contatos?.nome_razao_social.toLowerCase().includes(filtroBusca);
+            const buscaId = ne.id.toString().includes(filtroBusca);
+            
+            const dataNota = new Date(ne.data_compra + 'T00:00:00Z');
+            const dataInicio = filtroDataInicio ? new Date(filtroDataInicio + 'T00:00:00Z') : null;
+            const dataFim = filtroDataFim ? new Date(filtroDataFim + 'T23:59:59Z') : null;
+
+            const atendeBusca = filtroBusca ? (buscaFornecedor || buscaId) : true;
+            const atendeDataInicio = dataInicio ? dataNota >= dataInicio : true;
+            const atendeDataFim = dataFim ? dataNota <= dataFim : true;
+
+            return atendeBusca && atendeDataInicio && atendeDataFim;
+        });
+
+        filteredData.sort((a, b) => {
+            let valA, valB;
+            if (sortColumnEntrada === 'fornecedor') {
+                valA = a.contatos?.nome_razao_social.toLowerCase() || '';
+                valB = b.contatos?.nome_razao_social.toLowerCase() || '';
+            } else {
+                valA = a[sortColumnEntrada];
+                valB = b[sortColumnEntrada];
+            }
+            
+            if (valA < valB) return sortDirectionEntrada === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDirectionEntrada === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        const startIndex = (currentPageEntrada - 1) * rowsPerPageEntrada;
+        const endIndex = startIndex + rowsPerPageEntrada;
+        const paginatedData = filteredData.slice(startIndex, endIndex);
+
+        if (paginatedData.length === 0) {
+            corpoTabela.innerHTML = '<tr><td colspan="4">Nenhuma nota de compra encontrada.</td></tr>';
+        } else {
+            renderizarTabelaNotasEntrada(paginatedData);
+        }
+
+        renderizarPaginacaoEntrada(filteredData.length);
+        atualizarCabecalhoOrdenacaoEntrada();
+    }
+
+    function renderizarTabelaNotasEntrada(notas) {
+        const corpoTabela = document.getElementById('corpo-tabela-notas-entrada');
+        corpoTabela.innerHTML = ''; 
+        notas.forEach(ne => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${new Date(ne.data_compra + 'T00:00:00Z').toLocaleDateString('pt-BR')}</td>
+                <td>${ne.contatos ? ne.contatos.nome_razao_social : 'Fornecedor removido'}</td>
+                <td>R$ ${Number(ne.valor_total).toFixed(2)}</td>
+                <td class="actions-container">
+                    <button class="btn-acao btn-info" title="Ver Detalhes">👁️</button>
+                    <button class="btn-acao btn-warning" title="Editar Nota">✏️</button>
+                    <button class="btn-acao btn-danger" title="Deletar Nota">🗑️</button>
+                </td>
+            `;
+            corpoTabela.appendChild(tr);
+        });
+    }
+
+    function renderizarPaginacaoEntrada(totalItens) {
+        const container = document.getElementById('paginacao-botoes-entrada');
+        const infoContainer = document.getElementById('total-itens-info-entrada');
+        if (!container || !infoContainer) return;
+        container.innerHTML = '';
+        infoContainer.textContent = `(Total: ${totalItens})`;
+
+        const totalPages = Math.ceil(totalItens / rowsPerPageEntrada);
+        if (totalPages <= 1) return;
+
+        for (let i = 1; i <= totalPages; i++) {
+            const button = document.createElement('button');
+            button.textContent = i;
+            if (i === currentPageEntrada) button.classList.add('active');
+            button.addEventListener('click', () => {
+                currentPageEntrada = i;
+                displayNotasEntrada();
+            });
+            container.appendChild(button);
+        }
+    }
+    
+    function atualizarCabecalhoOrdenacaoEntrada() {
+        document.querySelectorAll('#subtela-historico-entrada th.sortable').forEach(th => {
+            const span = th.querySelector('span');
+            if(!span) return;
+            span.textContent = '';
+            if (th.dataset.sortEntrada === sortColumnEntrada) {
+                span.textContent = sortDirectionEntrada === 'asc' ? '▲' : '▼';
+            }
+        });
+    }
+    
+    document.getElementById('filtro-busca-entrada').addEventListener('input', () => { currentPageEntrada = 1; displayNotasEntrada(); });
+    document.getElementById('filtro-data-inicio-entrada').addEventListener('change', () => { currentPageEntrada = 1; displayNotasEntrada(); });
+    document.getElementById('filtro-data-fim-entrada').addEventListener('change', () => { currentPageEntrada = 1; displayNotasEntrada(); });
+    document.getElementById('rows-per-page-entrada').addEventListener('change', (e) => {
+        currentPageEntrada = 1;
+        rowsPerPageEntrada = parseInt(e.target.value, 10);
+        displayNotasEntrada();
+    });
+    document.getElementById('btn-limpar-filtros-entrada').addEventListener('click', () => {
+        document.getElementById('filtro-busca-entrada').value = '';
+        document.getElementById('filtro-data-inicio-entrada').value = '';
+        document.getElementById('filtro-data-fim-entrada').value = '';
+        currentPageEntrada = 1;
+        sortColumnEntrada = 'data_compra';
+        sortDirectionEntrada = 'desc';
+        displayNotasEntrada();
+    });
+    document.querySelectorAll('#subtela-historico-entrada th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const newSortColumn = th.dataset.sortEntrada;
+            if (sortColumnEntrada === newSortColumn) {
+                sortDirectionEntrada = sortDirectionEntrada === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumnEntrada = newSortColumn;
+                sortDirectionEntrada = 'asc';
+            }
+            currentPageEntrada = 1;
+            displayNotasEntrada();
+        });
+    });
 });
