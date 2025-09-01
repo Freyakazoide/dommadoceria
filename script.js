@@ -38,7 +38,7 @@ async function deletarInsumo(id, nome) {
     const { error } = await supabaseClient.from('insumos').delete().match({ id: id });
     if (error) {
         if (error.code === '23503') {
-            showNotification(`ERRO: "${nome}" não pode ser deletado pois está em uso em alguma receita.`, 'error');
+            showNotification(`ERRO: "${nome}" não pode ser deletado pois está em uso.`, 'error');
         } else {
             showNotification(`Não foi possível deletar o insumo "${nome}".`, 'error');
         }
@@ -117,7 +117,7 @@ async function deletarContato(id, nome) {
     const { error } = await supabaseClient.from('contatos').delete().match({ id: id });
     if (error) {
         if (error.code === '23503') {
-            showNotification(`ERRO: "${nome}" não pode ser deletado pois está associado a notas fiscais.`, 'error');
+            showNotification(`ERRO: "${nome}" não pode ser deletado pois está associado a notas.`, 'error');
         } else {
             showNotification(`Erro ao deletar o contato "${nome}".`, 'error');
         }
@@ -241,6 +241,53 @@ async function editarNotaSaida(notaId) {
     showNotification("Funcionalidade de edição de itens em desenvolvimento.", "info");
     modal.style.display = 'block';
 }
+
+async function verDetalhesNotaEntrada(notaId) {
+    const modal = document.getElementById('modal-ver-nota-entrada');
+    const container = document.getElementById('detalhes-ne-conteudo');
+    container.innerHTML = '<p>Carregando...</p>';
+    modal.style.display = 'block';
+
+    const { data: nota, error } = await supabaseClient.from('notas_entrada').select(`*, contatos(nome_razao_social)`).eq('id', notaId).single();
+    if (error) { container.innerHTML = '<p>Erro ao carregar detalhes da compra.</p>'; return; }
+
+    const { data: itens, errorItens } = await supabaseClient.from('nota_entrada_itens').select(`*, insumos(nome, unidade_medida)`).eq('nota_entrada_id', notaId);
+    if (errorItens) { container.innerHTML = '<p>Erro ao carregar insumos da compra.</p>'; return; }
+
+    let html = `
+        <p><strong>Fornecedor:</strong> ${nota.contatos.nome_razao_social}</p>
+        <p><strong>Data da Compra:</strong> ${new Date(nota.data_compra + 'T00:00:00Z').toLocaleDateString('pt-BR')}</p>
+        <hr>
+        <h4>Insumos Comprados:</h4>
+        <ul>
+    `;
+    if (Array.isArray(itens)) {
+        itens.forEach(item => {
+            html += `<li>${item.quantidade} ${item.insumos.unidade_medida} de ${item.insumos.nome} - R$ ${Number(item.preco_unitario_momento).toFixed(2)} (un)</li>`;
+        });
+    }
+    html += `</ul><hr><p class="linha-custo total"><strong>TOTAL: R$ ${Number(nota.valor_total).toFixed(2)}</strong></p>`;
+    container.innerHTML = html;
+}
+
+function editarNotaEntrada(notaId) {
+    showNotification("Funcionalidade de edição de compras em desenvolvimento.", "info");
+}
+
+async function deletarNotaEntrada(notaId) {
+    if (!confirm('TEM CERTEZA QUE QUER DELETAR ESTA NOTA DE COMPRA?\nEsta ação não pode ser desfeita.')) return;
+    await supabaseClient.from('nota_entrada_itens').delete().match({ nota_entrada_id: notaId });
+    const { error } = await supabaseClient.from('notas_entrada').delete().match({ id: notaId });
+    if (error) { 
+        showNotification('Erro ao deletar a nota de compra.', 'error');
+        console.error("Erro ao deletar NE:", error);
+    }
+    else { 
+        showNotification('Nota de compra deletada com sucesso.'); 
+        document.dispatchEvent(new CustomEvent('dadosAtualizados'));
+    }
+}
+
 
 function atualizarLabelsFormularioContato(prefixo = '') {
     const radioName = prefixo ? 'edit_tipo_pessoa' : 'tipo_pessoa';
@@ -850,7 +897,7 @@ document.addEventListener('DOMContentLoaded', () => {
             supabaseClient.from('produtos').select('*').order('nome'),
             supabaseClient.from('contatos').select('*').order('nome_razao_social'),
             supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`),
-            supabaseClient.from('notas_entrada').select(`*, contatos!notas_entrada_fornecedor_id_fkey(nome_razao_social)`)
+            supabaseClient.from('notas_entrada').select(`*, contatos(nome_razao_social)`)
         ]);
         
         insumosData = insumosResult.data || [];
@@ -863,51 +910,47 @@ document.addEventListener('DOMContentLoaded', () => {
         renderizarTabelaProdutos();
         renderizarTabelaContatos();
         
-        const selectors = [
-            document.getElementById('select-insumo-receita'), document.getElementById('nf-produto'),
-            document.getElementById('nf-cliente'), document.getElementById('ne-insumo'),
-            document.getElementById('ne-fornecedor'), document.getElementById('edit-ns-cliente'),
-            document.getElementById('edit-ns-produto')
-        ];
-        
-        selectors.forEach(sel => { if(sel) sel.innerHTML = ''; });
-        
-        const optionTemplates = {
-            insumo: '<option value="">Selecione...</option>',
-            produto: '<option value="">Selecione um produto...</option>',
-            cliente: '<option value="">Selecione um cliente...</option>',
-            fornecedor: '<option value="">Selecione um fornecedor...</option>'
+        const selectors = {
+            selectInsumo: document.getElementById('select-insumo-receita'),
+            selectProdutoNf: document.getElementById('nf-produto'),
+            selectClienteNf: document.getElementById('nf-cliente'),
+            selectNeInsumo: document.getElementById('ne-insumo'),
+            selectNeFornecedor: document.getElementById('ne-fornecedor'),
+            editNsCliente: document.getElementById('edit-ns-cliente'),
+            editNsProduto: document.getElementById('edit-ns-produto')
         };
-
-        selectors[0].innerHTML = optionTemplates.insumo;
-        selectors[1].innerHTML = optionTemplates.produto;
-        selectors[2].innerHTML = optionTemplates.cliente;
-        selectors[3].innerHTML = optionTemplates.insumo;
-        selectors[4].innerHTML = optionTemplates.fornecedor;
-        selectors[5].innerHTML = optionTemplates.cliente;
-        selectors[6].innerHTML = optionTemplates.produto;
+        
+        Object.values(selectors).forEach(sel => { if(sel) sel.innerHTML = ''; });
+        
+        selectors.selectInsumo.innerHTML = '<option value="">Selecione...</option>';
+        selectors.selectProdutoNf.innerHTML = '<option value="">Selecione um produto...</option>';
+        selectors.selectClienteNf.innerHTML = '<option value="">Selecione um cliente...</option>';
+        selectors.selectNeInsumo.innerHTML = '<option value="">Selecione um insumo...</option>';
+        selectors.selectNeFornecedor.innerHTML = '<option value="">Selecione um fornecedor...</option>';
+        selectors.editNsCliente.innerHTML = '<option value="">Selecione um cliente...</option>';
+        selectors.editNsProduto.innerHTML = '<option value="">Selecione um produto...</option>';
         
         insumosData.forEach(i => {
-            selectors[0].innerHTML += `<option value="${i.id}">${i.nome}</option>`;
-            selectors[3].innerHTML += `<option value="${i.id}">${i.nome}</option>`;
+            selectors.selectInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`;
+            selectors.selectNeInsumo.innerHTML += `<option value="${i.id}">${i.nome}</option>`;
         });
 
         produtosData.filter(p => p.preco_venda > 0).forEach(p => {
             const option = `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`;
-            selectors[1].innerHTML += option;
-            selectors[6].innerHTML += option;
+            selectors.selectProdutoNf.innerHTML += option;
+            selectors.editNsProduto.innerHTML += option;
         });
         
         const clientes = contatosData.filter(c => parsePapeis(c.papeis).includes('Cliente'));
         clientes.forEach(c => {
             const option = `<option value="${c.id}">${c.nome_razao_social}</option>`;
-            selectors[2].innerHTML += option;
-            selectors[5].innerHTML += option;
+            selectors.selectClienteNf.innerHTML += option;
+            selectors.editNsCliente.innerHTML += option;
         });
 
         const fornecedores = contatosData.filter(c => parsePapeis(c.papeis).includes('Fornecedor'));
         fornecedores.forEach(f => {
-            selectors[4].innerHTML += `<option value="${f.id}">${f.nome_razao_social}</option>`;
+            selectors.selectNeFornecedor.innerHTML += `<option value="${f.id}">${f.nome_razao_social}</option>`;
         });
         
         document.getElementById('ne-data').valueAsDate = new Date();
@@ -922,7 +965,6 @@ document.addEventListener('DOMContentLoaded', () => {
     atualizarTodosOsDados();
     atualizarLabelsFormularioContato();
 
-    // Funções do Histórico de Compras
     function displayNotasEntrada() {
         const corpoTabela = document.getElementById('corpo-tabela-notas-entrada');
         if (!corpoTabela) return;
@@ -986,9 +1028,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${ne.contatos ? ne.contatos.nome_razao_social : 'Fornecedor removido'}</td>
                 <td>R$ ${Number(ne.valor_total).toFixed(2)}</td>
                 <td class="actions-container">
-                    <button class="btn-acao btn-info" title="Ver Detalhes">👁️</button>
-                    <button class="btn-acao btn-warning" title="Editar Nota">✏️</button>
-                    <button class="btn-acao btn-danger" title="Deletar Nota">🗑️</button>
+                    <button class="btn-acao btn-info" title="Ver Detalhes" onclick="verDetalhesNotaEntrada(${ne.id})">👁️</button>
+                    <button class="btn-acao btn-warning" title="Editar Nota" onclick="editarNotaEntrada(${ne.id})">✏️</button>
+                    <button class="btn-acao btn-danger" title="Deletar Nota" onclick="deletarNotaEntrada(${ne.id})">🗑️</button>
                 </td>
             `;
             corpoTabela.appendChild(tr);
