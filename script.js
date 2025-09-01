@@ -279,6 +279,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let sortColumn = 'created_at';
     let sortDirection = 'desc';
 
+let currentPageEntrada = 1;
+let rowsPerPageEntrada = 20;
+let sortColumnEntrada = 'data_compra';
+let sortDirectionEntrada = 'desc';
+
     const navLinks = document.querySelectorAll('.nav-link');
     const telas = document.querySelectorAll('.main-content .tela');
     const modals = document.querySelectorAll('.modal');
@@ -842,18 +847,21 @@ btnSalvarNe.addEventListener('click', async () => {
     });
 
     async function atualizarTodosOsDados() {
-        const [insumosResult, produtosResult, contatosResult, notasResult] = await Promise.all([
-            supabaseClient.from('insumos').select('*').order('nome'),
-            supabaseClient.from('produtos').select('*').order('nome'),
-            supabaseClient.from('contatos').select('*').order('nome_razao_social'),
-            supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`)
-        ]);
+const [insumosResult, produtosResult, contatosResult, notasSaidaResult, notasEntradaResult] = await Promise.all([
+        supabaseClient.from('insumos').select('*').order('nome'),
+        supabaseClient.from('produtos').select('*').order('nome'),
+        supabaseClient.from('contatos').select('*').order('nome_razao_social'),
+        supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`),
+        supabaseClient.from('notas_entrada').select(`*, contatos(nome_razao_social)`) 
+    ]);
         
         insumosData = insumosResult.data || [];
         produtosData = produtosResult.data || [];
         contatosData = contatosResult.data || [];
         notasFiscaisData = notasResult.data || [];
-        
+        notasEntradaData = notasEntradaResult.data || [];
+
+
         renderizarTabelaInsumos();
         renderizarTabelaProdutos();
         renderizarTabelaContatos();
@@ -897,8 +905,146 @@ btnSalvarNe.addEventListener('click', async () => {
         
         document.getElementById('ne-data').valueAsDate = new Date();
         displayNotasFiscais();
+         displayNotasEntrada();
     }
     
+    function displayNotasEntrada() {
+    const corpoTabela = document.getElementById('corpo-tabela-notas-entrada');
+    if (!corpoTabela) return;
+    corpoTabela.innerHTML = '';
+
+    const filtroBusca = document.getElementById('filtro-busca-entrada').value.toLowerCase();
+    const filtroDataInicio = document.getElementById('filtro-data-inicio-entrada').value;
+    const filtroDataFim = document.getElementById('filtro-data-fim-entrada').value;
+
+    const filteredData = notasEntradaData.filter(ne => {
+        const buscaFornecedor = ne.contatos?.nome_razao_social.toLowerCase().includes(filtroBusca);
+        const buscaId = ne.id.toString().includes(filtroBusca);
+
+        const dataNota = new Date(ne.data_compra + 'T00:00:00Z');
+        const dataInicio = filtroDataInicio ? new Date(filtroDataInicio + 'T00:00:00Z') : null;
+        const dataFim = filtroDataFim ? new Date(filtroDataFim + 'T23:59:59Z') : null;
+
+        const atendeBusca = filtroBusca ? (buscaFornecedor || buscaId) : true;
+        const atendeDataInicio = dataInicio ? dataNota >= dataInicio : true;
+        const atendeDataFim = dataFim ? dataNota <= dataFim : true;
+
+        return atendeBusca && atendeDataInicio && atendeDataFim;
+    });
+
+    filteredData.sort((a, b) => {
+        let valA, valB;
+        if (sortColumnEntrada === 'fornecedor') {
+            valA = a.contatos?.nome_razao_social.toLowerCase() || '';
+            valB = b.contatos?.nome_razao_social.toLowerCase() || '';
+        } else {
+            valA = a[sortColumnEntrada];
+            valB = b[sortColumnEntrada];
+        }
+
+        if (valA < valB) return sortDirectionEntrada === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDirectionEntrada === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const startIndex = (currentPageEntrada - 1) * rowsPerPageEntrada;
+    const endIndex = startIndex + rowsPerPageEntrada;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
+
+    if (paginatedData.length === 0) {
+        corpoTabela.innerHTML = '<tr><td colspan="4">Nenhuma nota de compra encontrada.</td></tr>';
+    } else {
+        renderizarTabelaNotasEntrada(paginatedData);
+    }
+
+    renderizarPaginacaoEntrada(filteredData.length);
+    atualizarCabecalhoOrdenacaoEntrada();
+}
+
+function renderizarTabelaNotasEntrada(notas) {
+    const corpoTabela = document.getElementById('corpo-tabela-notas-entrada');
+    corpoTabela.innerHTML = ''; 
+    notas.forEach(ne => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${new Date(ne.data_compra + 'T00:00:00Z').toLocaleDateString('pt-BR')}</td>
+            <td>${ne.contatos ? ne.contatos.nome_razao_social : 'Fornecedor removido'}</td>
+            <td>R$ ${Number(ne.valor_total).toFixed(2)}</td>
+            <td class="actions-container">
+                <button class="btn-acao btn-info" title="Ver Detalhes">👁️</button>
+                <button class="btn-acao btn-warning" title="Editar Nota">✏️</button>
+                <button class="btn-acao btn-danger" title="Deletar Nota">🗑️</button>
+            </td>
+        `;
+        corpoTabela.appendChild(tr);
+    });
+}
+
+function renderizarPaginacaoEntrada(totalItens) {
+    const container = document.getElementById('paginacao-botoes-entrada');
+    const infoContainer = document.getElementById('total-itens-info-entrada');
+    if (!container || !infoContainer) return;
+    container.innerHTML = '';
+    infoContainer.textContent = `(Total: ${totalItens})`;
+
+    const totalPages = Math.ceil(totalItens / rowsPerPageEntrada);
+    if (totalPages <= 1) return;
+
+    for (let i = 1; i <= totalPages; i++) {
+        const button = document.createElement('button');
+        button.textContent = i;
+        if (i === currentPageEntrada) button.classList.add('active');
+        button.addEventListener('click', () => {
+            currentPageEntrada = i;
+            displayNotasEntrada();
+        });
+        container.appendChild(button);
+    }
+}
+
+function atualizarCabecalhoOrdenacaoEntrada() {
+    document.querySelectorAll('#subtela-historico-entrada th.sortable').forEach(th => {
+        const span = th.querySelector('span');
+        if(!span) return;
+        span.textContent = '';
+        if (th.dataset.sortEntrada === sortColumnEntrada) {
+            span.textContent = sortDirectionEntrada === 'asc' ? '▲' : '▼';
+        }
+    });
+}
+
+document.getElementById('filtro-busca-entrada').addEventListener('input', () => { currentPageEntrada = 1; displayNotasEntrada(); });
+document.getElementById('filtro-data-inicio-entrada').addEventListener('change', () => { currentPageEntrada = 1; displayNotasEntrada(); });
+document.getElementById('filtro-data-fim-entrada').addEventListener('change', () => { currentPageEntrada = 1; displayNotasEntrada(); });
+document.getElementById('rows-per-page-entrada').addEventListener('change', (e) => {
+    currentPageEntrada = 1;
+    rowsPerPageEntrada = parseInt(e.target.value, 10);
+    displayNotasEntrada();
+});
+document.getElementById('btn-limpar-filtros-entrada').addEventListener('click', () => {
+    document.getElementById('filtro-busca-entrada').value = '';
+    document.getElementById('filtro-data-inicio-entrada').value = '';
+    document.getElementById('filtro-data-fim-entrada').value = '';
+    currentPageEntrada = 1;
+    sortColumnEntrada = 'data_compra';
+    sortDirectionEntrada = 'desc';
+    displayNotasEntrada();
+});
+document.querySelectorAll('#subtela-historico-entrada th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+        const newSortColumn = th.dataset.sortEntrada;
+        if (sortColumnEntrada === newSortColumn) {
+            sortDirectionEntrada = sortDirectionEntrada === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumnEntrada = newSortColumn;
+            sortDirectionEntrada = 'asc';
+        }
+        currentPageEntrada = 1;
+        displayNotasEntrada();
+    });
+});
+
+
     document.addEventListener('dadosAtualizados', atualizarTodosOsDados);
     
     mostrarTela('tela-dashboard');

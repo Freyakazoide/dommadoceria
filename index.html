@@ -243,9 +243,38 @@
                         </div>
                     </div>
                 </div>
-                <div id="subtela-historico-entrada" class="subtela hidden">
-                    <p>Histórico de compras em breve.</p>
-                </div>
+<div id="subtela-historico-entrada" class="subtela hidden">
+    <div class="historico-controles">
+        <input type="text" id="filtro-busca-entrada" placeholder="Buscar por fornecedor, insumo, ID...">
+        <input type="date" id="filtro-data-inicio-entrada">
+        <input type="date" id="filtro-data-fim-entrada">
+        <button id="btn-limpar-filtros-entrada">Limpar Filtros</button>
+    </div>
+    <table class="tabela-bonita">
+        <thead>
+            <tr>
+                <th data-sort-entrada="data_compra" class="sortable">Data <span></span></th>
+                <th data-sort-entrada="fornecedor" class="sortable">Fornecedor <span></span></th>
+                <th data-sort-entrada="valor_total" class="sortable">Valor <span></span></th>
+                <th style="text-align: right;">Ações</th>
+            </tr>
+        </thead>
+        <tbody id="corpo-tabela-notas-entrada"></tbody>
+    </table>
+    <div class="paginacao-controles">
+        <div class="paginacao-info">
+            <label for="rows-per-page-entrada">Itens por página:</label>
+            <select id="rows-per-page-entrada">
+                <option value="10">10</option>
+                <option value="20" selected>20</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+            </select>
+            <span id="total-itens-info-entrada"></span>
+        </div>
+        <div id="paginacao-botoes-entrada"></div>
+    </div>
+</div>
             </section>
         </main>
     </div>
