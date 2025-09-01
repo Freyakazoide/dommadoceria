@@ -310,6 +310,65 @@ function atualizarLabelsFormularioContato(prefixo = '') {
     }
 }
 
+let editNsItens = []; // Guarda os itens da nota em edição
+
+// Função para renderizar os itens DENTRO do modal de edição
+function renderizarItensNs() {
+    const container = document.getElementById('edit-ns-itens-container');
+    container.innerHTML = '';
+    if (editNsItens.length === 0) {
+        container.innerHTML = '<p class="placeholder">Adicione produtos...</p>';
+    } else {
+        editNsItens.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'nf-item';
+            itemDiv.innerHTML = `
+                <span>${item.quantidade}x ${item.nome}</span>
+                <strong>R$ ${(item.quantidade * item.preco_unitario_momento).toFixed(2)}</strong>
+                <button type="button" class="btn-remover-ingrediente" onclick="removerItemNs(${index})">❌</button>
+            `;
+            container.appendChild(itemDiv);
+        });
+    }
+    const total = editNsItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
+    document.getElementById('edit-ns-valor-total').textContent = `R$ ${total.toFixed(2)}`;
+}
+
+// Função para remover um item DA LISTA do modal de edição
+window.removerItemNs = function(index) {
+    editNsItens.splice(index, 1);
+    renderizarItensNs();
+}
+
+// Função principal que abre e popula o modal de edição
+async function editarNotaSaida(notaId) {
+    const modal = document.getElementById('modal-editar-nota-saida');
+    document.getElementById('edit-ns-hidden-id').value = notaId;
+    document.getElementById('edit-ns-id').textContent = `(#${notaId})`;
+
+    const { data: nota, error } = await supabaseClient.from('notas_fiscais').select(`*, contatos(id)`).eq('id', notaId).single();
+    if (error) return showNotification('Erro ao carregar dados da nota.', 'error');
+
+    const { data: itens, errorItens } = await supabaseClient.from('nota_fiscal_itens').select(`*, produtos(*)`).eq('nota_fiscal_id', notaId);
+    if (errorItens) return showNotification('Erro ao carregar itens da nota.', 'error');
+    
+    document.getElementById('edit-ns-cliente').value = nota.contatos.id;
+    document.getElementById('edit-ns-metodo-pagamento').value = nota.metodo_pagamento;
+    document.getElementById('edit-ns-status-pagamento').value = nota.status_pagamento;
+    
+    // Popula a lista de itens e renderiza
+    editNsItens = itens.map(item => ({
+        id: item.id,
+        produto_id: item.produtos.id,
+        nome: item.produtos.nome,
+        quantidade: item.quantidade,
+        preco_unitario_momento: parseFloat(item.preco_unitario_momento)
+    }));
+    renderizarItensNs();
+    
+    modal.style.display = 'block';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     
     let insumosData = [];
@@ -345,6 +404,75 @@ document.addEventListener('DOMContentLoaded', () => {
     const formDadosNe = document.getElementById('form-dados-ne');
     const formAddNeItem = document.getElementById('form-add-ne-item');
     const btnSalvarNe = document.getElementById('btn-salvar-ne');
+    const formEditAddNsItem = document.getElementById('form-edit-add-ns-item');
+    const btnAtualizarNs = document.getElementById('btn-atualizar-ns');
+
+    formEditAddNsItem.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const produtoId = document.getElementById('edit-ns-produto').value;
+    if (!produtoId) return showNotification('Selecione um produto.', 'error');
+
+    const produtoSelecionado = produtosData.find(p => p.id == produtoId);
+    if (!produtoSelecionado.preco_venda) return showNotification('Este produto não foi precificado.', 'error');
+
+    editNsItens.push({
+        produto_id: parseInt(produtoId, 10),
+        nome: produtoSelecionado.nome,
+        quantidade: parseFloat(document.getElementById('edit-ns-quantidade').value),
+        preco_unitario_momento: parseFloat(produtoSelecionado.preco_venda)
+    });
+    renderizarItensNs();
+    event.target.reset();
+});
+
+btnAtualizarNs.addEventListener('click', async () => {
+    const notaId = document.getElementById('edit-ns-hidden-id').value;
+    if (!notaId) return;
+
+    if (editNsItens.length === 0) return showNotification('A nota não pode ficar sem itens.', 'error');
+
+    const valorTotal = editNsItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
+
+    // 1. Atualiza os dados principais da nota
+    const { error: updateError } = await supabaseClient.from('notas_fiscais').update({
+        cliente_id: document.getElementById('edit-ns-cliente').value,
+        metodo_pagamento: document.getElementById('edit-ns-metodo-pagamento').value,
+        status_pagamento: document.getElementById('edit-ns-status-pagamento').value,
+        valor_total: valorTotal
+    }).match({ id: notaId });
+
+    if (updateError) {
+        console.error("Erro ao atualizar a nota:", updateError);
+        return showNotification('Falha ao atualizar a nota.', 'error');
+    }
+
+    // 2. Deleta os itens antigos
+    const { error: deleteError } = await supabaseClient.from('nota_fiscal_itens').delete().match({ nota_fiscal_id: notaId });
+    if (deleteError) {
+        console.error("Erro ao deletar itens antigos:", deleteError);
+        return showNotification('Falha ao limpar itens antigos.', 'error');
+    }
+
+    // 3. Insere os itens novos (que estão em editNsItens)
+    const novosItensParaSalvar = editNsItens.map(item => ({
+        nota_fiscal_id: notaId,
+        produto_id: item.produto_id,
+        quantidade: item.quantidade,
+        preco_unitario_momento: item.preco_unitario_momento
+    }));
+
+    const { error: insertError } = await supabaseClient.from('nota_fiscal_itens').insert(novosItensParaSalvar);
+
+    if (insertError) {
+        console.error("Erro ao inserir novos itens:", insertError);
+        return showNotification('Falha ao salvar os novos itens.', 'error');
+    }
+
+    showNotification('Nota de Venda atualizada com sucesso!');
+    document.getElementById('modal-editar-nota-saida').style.display = 'none';
+    document.dispatchEvent(new CustomEvent('dadosAtualizados'));
+});
+
 
     function mostrarTela(targetId) {
         telas.forEach(tela => tela.classList.add('hidden'));
