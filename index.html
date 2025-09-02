@@ -423,6 +423,50 @@
             <div id="detalhes-ne-conteudo"></div>
         </div>
     </div>
+    <div id="modal-editar-nota-entrada" class="modal modal-grande">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Editar Nota de Compra <span id="edit-ne-id"></span></h2>
+            <input type="hidden" id="edit-ne-hidden-id">
+            <div class="nota-fiscal-container">
+                <div class="nota-fiscal-coluna">
+                    <h3>1. Dados da Compra</h3>
+                    <form id="form-edit-dados-ne">
+                        <label for="edit-ne-fornecedor">Fornecedor:</label>
+                        <select id="edit-ne-fornecedor" required></select>
+                        <label for="edit-ne-data">Data da Compra:</label>
+                        <input type="date" id="edit-ne-data" required>
+                    </form>
+                    <hr>
+                    <h3>2. Adicionar Insumos</h3>
+                    <form id="form-edit-add-ne-item">
+                        <label for="edit-ne-insumo">Insumo:</label>
+                        <select id="edit-ne-insumo" required></select>
+                         <div class="form-grid">
+                            <div class="form-group">
+                                <label for="edit-ne-quantidade">Quantidade:</label>
+                                <input type="number" id="edit-ne-quantidade" value="1" step="0.01" min="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-ne-preco">Preço Unitário (R$):</label>
+                                <input type="number" id="edit-ne-preco" step="0.01" min="0.01" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-secundario">+ Adicionar</button>
+                    </form>
+                </div>
+                <div class="nota-fiscal-coluna">
+                    <h3>Insumos da Nota</h3>
+                    <div id="edit-ne-itens-container"><p class="placeholder">Adicione insumos...</p></div>
+                    <div class="nf-total">
+                        <span>TOTAL:</span>
+                        <strong id="edit-ne-valor-total">R$ 0.00</strong>
+                    </div>
+                    <button id="btn-atualizar-ne">💾 Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div id="notification-container" class="notification-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
