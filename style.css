@@ -635,3 +635,6 @@ th.sortable span {
 .dashboard-widget li:last-child {
     border-bottom: none;
 }
+.dashboard-widget canvas {
+    max-height: 400px;
+}
