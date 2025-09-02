@@ -24,6 +24,7 @@
                     <li class="nav-section-title">MOVIMENTAÇÕES</li>
                     <li><a href="#" class="nav-link" data-target="tela-notas-saida">💸 Notas de Saída (Vendas)</a></li>
                     <li><a href="#" class="nav-link" data-target="tela-notas-entrada">📥 Notas de Entrada (Compras)</a></li>
+                    <li><a href="#" class="nav-link" data-target="tela-estoque">📈 Estoque</a></li>
                 </ul>
             </nav>
         </aside>
@@ -276,6 +277,23 @@
                     </div>
                 </div>
             </section>
+
+            <section id="tela-estoque" class="tela hidden">
+                <h2>Controle de Estoque</h2>
+                <div class="historico-controles">
+                    <input type="text" id="filtro-busca-estoque" placeholder="Buscar por insumo...">
+                </div>
+                <table class="tabela-bonita">
+                    <thead>
+                        <tr>
+                            <th>Insumo</th>
+                            <th>Unidade de Medida</th>
+                            <th>Qtd. em Estoque</th>
+                        </tr>
+                    </thead>
+                    <tbody id="corpo-tabela-estoque"></tbody>
+                </table>
+            </section>
         </main>
     </div>
 
@@ -471,5 +489,6 @@
     <div id="notification-container" class="notification-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js" defer></script>
+    <script src="estoque.js" defer></script>
 </body>
 </html>
