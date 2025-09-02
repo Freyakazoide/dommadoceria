@@ -98,10 +98,10 @@ function renderizarTabelaEstoque(estoque) {
         let statusText = 'OK';
         
         if (item.estoqueAtual <= 0) {
-            statusClass = 'status-zerado'; // Vermelho
-            statusText = 'Zerad';
+            statusClass = 'status-zerado';
+            statusText = 'Zerado'; // Corrigido de "Zerad"
         } else if (item.estoqueAtual <= item.nivel_minimo_estoque) {
-            statusClass = 'status-baixo'; // Amarelo
+            statusClass = 'status-baixo';
             statusText = 'Baixo';
         }
 

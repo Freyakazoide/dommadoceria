@@ -447,3 +447,16 @@ th.sortable span {
     margin-left: 0.5rem;
     display: inline-block;
 }
+
+.status-ok {
+    background-color: var(--cor-sucesso);
+}
+
+.status-baixo {
+    background-color: var(--cor-aviso);
+    color: var(--cor-texto);
+}
+
+.status-zerado {
+    background-color: var(--cor-perigo);
+}
