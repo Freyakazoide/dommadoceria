@@ -6,6 +6,7 @@
     <title>Domma Doceria - Gestão</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -36,13 +37,10 @@
                 <div class="dashboard-header">
                     <h2>Dashboard</h2>
                     <div class="dashboard-filtros">
-                        <label for="dashboard-periodo">Período:</label>
-                        <select id="dashboard-periodo">
-                            <option value="hoje">Hoje</option>
-                            <option value="semana">Esta Semana</option>
-                            <option value="mes" selected>Este Mês</option>
-                            <option value="ano">Este Ano</option>
-                        </select>
+                        <label>Período:</label>
+                        <input type="date" id="dashboard-data-inicio">
+                        <label>até</label>
+                        <input type="date" id="dashboard-data-fim">
                     </div>
                 </div>
                 <div class="kpi-container">
@@ -63,9 +61,19 @@
                         <span class="kpi-value" id="kpi-estoque-baixo">0</span>
                     </div>
                 </div>
+                <div class="dashboard-charts">
+                     <div class="dashboard-widget">
+                        <h3>Vendas por Mês</h3>
+                        <canvas id="vendasPorMesChart"></canvas>
+                    </div>
+                    <div class="dashboard-widget">
+                        <h3>Top 5 Produtos Vendidos</h3>
+                        <canvas id="topProdutosChart"></canvas>
+                    </div>
+                </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-widget">
-                        <h3>🍰 Produtos Mais Vendidos</h3>
+                        <h3>🍰 Detalhes dos Produtos Mais Vendidos</h3>
                         <ul id="lista-produtos-mais-vendidos">
                             <li>Nenhuma venda no período.</li>
                         </ul>
