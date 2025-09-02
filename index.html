@@ -365,8 +365,53 @@
             </section>
             
             <section id="tela-balancete" class="tela hidden">
-                <h2>Balancete Financeiro</h2>
-                <p>Em breve: uma análise detalhada de suas receitas e despesas.</p>
+                <div class="dashboard-header">
+                    <h2>Balancete Financeiro</h2>
+                    <div class="dashboard-filtros">
+                        <label>Período:</label>
+                        <input type="date" id="balancete-data-inicio">
+                        <label>até</label>
+                        <input type="date" id="balancete-data-fim">
+                    </div>
+                </div>
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <span class="kpi-title">🟢 Total de Receitas</span>
+                        <span class="kpi-value" id="balancete-receitas">R$ 0,00</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">🔴 Total de Custos</span>
+                        <span class="kpi-value" id="balancete-custos">R$ 0,00</span>
+                    </div>
+                    <div class="kpi-card" id="card-lucro-bruto">
+                        <span class="kpi-title">📊 Lucro Bruto</span>
+                        <span class="kpi-value" id="balancete-lucro">R$ 0,00</span>
+                    </div>
+                    <div class="kpi-card" id="card-margem-lucro">
+                        <span class="kpi-title">📈 Margem de Lucro</span>
+                        <span class="kpi-value" id="balancete-margem">0,00%</span>
+                    </div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="dashboard-widget">
+                        <h3>Detalhamento de Receitas (Vendas)</h3>
+                        <div class="tabela-wrapper">
+                            <table class="tabela-bonita">
+                                <thead><tr><th>Data</th><th>Cliente</th><th>Valor</th></tr></thead>
+                                <tbody id="balancete-tabela-receitas"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="dashboard-widget">
+                        <h3>Detalhamento de Custos (Compras)</h3>
+                         <div class="tabela-wrapper">
+                            <table class="tabela-bonita">
+                                <thead><tr><th>Data</th><th>Fornecedor</th><th>Valor</th></tr></thead>
+                                <tbody id="balancete-tabela-custos"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </section>
         </main>
     </div>
