@@ -25,14 +25,58 @@
                     <li><a href="#" class="nav-link" data-target="tela-notas-saida">💸 Notas de Saída (Vendas)</a></li>
                     <li><a href="#" class="nav-link" data-target="tela-notas-entrada">📥 Notas de Entrada (Compras)</a></li>
                     <li><a href="#" class="nav-link" data-target="tela-estoque">📈 Estoque</a></li>
+                    <li class="nav-section-title">FINANCEIRO</li>
+                    <li><a href="#" class="nav-link" data-target="tela-balancete">🧾 Balancete</a></li>
                 </ul>
             </nav>
         </aside>
 
         <main class="main-content">
             <section id="tela-dashboard" class="tela">
-                <h2>Dashboard</h2>
-                <p>Em breve, aqui você verá um resumo do seu negócio!</p>
+                <div class="dashboard-header">
+                    <h2>Dashboard</h2>
+                    <div class="dashboard-filtros">
+                        <label for="dashboard-periodo">Período:</label>
+                        <select id="dashboard-periodo">
+                            <option value="hoje">Hoje</option>
+                            <option value="semana">Esta Semana</option>
+                            <option value="mes" selected>Este Mês</option>
+                            <option value="ano">Este Ano</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="kpi-container">
+                    <div class="kpi-card">
+                        <span class="kpi-title">💰 Faturamento Bruto</span>
+                        <span class="kpi-value" id="kpi-faturamento-bruto">R$ 0,00</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">🛒 Vendas Realizadas</span>
+                        <span class="kpi-value" id="kpi-vendas-realizadas">0</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-title">🎫 Ticket Médio</span>
+                        <span class="kpi-value" id="kpi-ticket-medio">R$ 0,00</span>
+                    </div>
+                    <div class="kpi-card alert">
+                        <span class="kpi-title">📉 Insumos com Estoque Baixo</span>
+                        <span class="kpi-value" id="kpi-estoque-baixo">0</span>
+                    </div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="dashboard-widget">
+                        <h3>🍰 Produtos Mais Vendidos</h3>
+                        <ul id="lista-produtos-mais-vendidos">
+                            <li>Nenhuma venda no período.</li>
+                        </ul>
+                    </div>
+                    <div class="dashboard-widget">
+                        <h3>👥 Maiores Clientes</h3>
+                        <ul id="lista-maiores-clientes">
+                            <li>Nenhuma venda no período.</li>
+                        </ul>
+                    </div>
+                </div>
             </section>
             
             <section id="tela-produtos" class="tela hidden">
@@ -56,27 +100,27 @@
 
             <section id="tela-insumos" class="tela hidden">
                 <h2>Estoque de Insumos</h2>
-<form id="form-insumos" class="form-grid">
-    <div class="form-group">
-        <label for="nome-insumo">Nome do Insumo</label>
-        <input type="text" id="nome-insumo" placeholder="Ex: Farinha de Trigo" required>
-    </div>
-    <div class="form-group">
-        <label for="unidade-medida">Unidade de Medida</label>
-        <input type="text" id="unidade-medida" placeholder="kg, g, un" required>
-    </div>
-    <div class="form-group">
-        <label for="preco-unitario">Preço de Compra (R$)</label>
-        <input type="number" id="preco-unitario" placeholder="2.50" step="0.01" required>
-    </div>
-    <div class="form-group">
-        <label for="nivel_minimo_estoque">Estoque Mínimo</label>
-        <input type="number" id="nivel_minimo_estoque" placeholder="Ex: 0.5" step="0.01" value="0" required>
-    </div>
-    <div class="form-group full-width">
-        <button type="submit">Adicionar Insumo</button>
-    </div>
-</form>
+                <form id="form-insumos" class="form-grid">
+                    <div class="form-group">
+                        <label for="nome-insumo">Nome do Insumo</label>
+                        <input type="text" id="nome-insumo" placeholder="Ex: Farinha de Trigo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="unidade-medida">Unidade de Medida</label>
+                        <input type="text" id="unidade-medida" placeholder="kg, g, un" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="preco-unitario">Preço de Compra (R$)</label>
+                        <input type="number" id="preco-unitario" placeholder="2.50" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nivel_minimo_estoque">Estoque Mínimo</label>
+                        <input type="number" id="nivel_minimo_estoque" placeholder="Ex: 0.5" step="0.01" value="0" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <button type="submit">Adicionar Insumo</button>
+                    </div>
+                </form>
                 <hr>
                 <table class="tabela-bonita">
                     <thead>
@@ -299,17 +343,22 @@
                     <input type="text" id="filtro-busca-estoque" placeholder="Buscar por insumo...">
                 </div>
                 <table class="tabela-bonita">
-<thead>
-    <tr>
-        <th data-sort-estoque="nome" class="sortable">Insumo <span></span></th>
-        <th data-sort-estoque="unidade_medida" class="sortable">Unidade <span></span></th>
-        <th data-sort-estoque="estoqueAtual" class="sortable">Qtd. em Estoque <span></span></th>
-        <th data-sort-estoque="nivel_minimo_estoque" class="sortable">Estoque Mínimo <span></span></th>
-        <th>Status</th>
-    </tr>
-</thead>
+                    <thead>
+                        <tr>
+                            <th data-sort-estoque="nome" class="sortable">Insumo <span></span></th>
+                            <th data-sort-estoque="unidade_medida" class="sortable">Unidade <span></span></th>
+                            <th data-sort-estoque="estoqueAtual" class="sortable">Qtd. em Estoque <span></span></th>
+                            <th data-sort-estoque="nivel_minimo_estoque" class="sortable">Estoque Mínimo <span></span></th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
                     <tbody id="corpo-tabela-estoque"></tbody>
                 </table>
+            </section>
+            
+            <section id="tela-balancete" class="tela hidden">
+                <h2>Balancete Financeiro</h2>
+                <p>Em breve: uma análise detalhada de suas receitas e despesas.</p>
             </section>
         </main>
     </div>
@@ -318,26 +367,26 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Editar Insumo</h2>
-<form id="form-editar-insumo">
-    <input type="hidden" id="edit-insumo-id">
-    <div class="form-group">
-        <label for="edit-nome-insumo">Nome do Insumo:</label>
-        <input type="text" id="edit-nome-insumo">
-    </div>
-    <div class="form-group">
-        <label for="edit-unidade-medida">Unidade de Medida:</label>
-        <input type="text" id="edit-unidade-medida">
-    </div>
-    <div class="form-group">
-        <label for="edit-preco-unitario">Preço Unitário (R$):</label>
-        <input type="number" id="edit-preco-unitario" step="0.01">
-    </div>
-    <div class="form-group">
-        <label for="edit-nivel_minimo_estoque">Estoque Mínimo:</label>
-        <input type="number" id="edit-nivel_minimo_estoque" step="0.01">
-    </div>
-    <button type="submit">Salvar Alterações</button>
-</form>
+            <form id="form-editar-insumo">
+                <input type="hidden" id="edit-insumo-id">
+                <div class="form-group">
+                    <label for="edit-nome-insumo">Nome do Insumo:</label>
+                    <input type="text" id="edit-nome-insumo">
+                </div>
+                <div class="form-group">
+                    <label for="edit-unidade-medida">Unidade de Medida:</label>
+                    <input type="text" id="edit-unidade-medida">
+                </div>
+                <div class="form-group">
+                    <label for="edit-preco-unitario">Preço Unitário (R$):</label>
+                    <input type="number" id="edit-preco-unitario" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label for="edit-nivel_minimo_estoque">Estoque Mínimo:</label>
+                    <input type="number" id="edit-nivel_minimo_estoque" step="0.01">
+                </div>
+                <button type="submit">Salvar Alterações</button>
+            </form>
         </div>
     </div>
     <div id="modal-gerenciar-produto" class="modal modal-grande">
@@ -517,5 +566,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js" defer></script>
     <script src="estoque.js" defer></script>
+    <script src="dashboard.js" defer></script>
 </body>
 </html>
