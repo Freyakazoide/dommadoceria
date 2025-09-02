@@ -5,33 +5,33 @@ async function calcularEExibirDashboard() {
 
     try {
         const [
-            { data: todasAsVendas, error: vendasError },
-            { data: todosOsItensVendidos, error: itensError },
-            { data: estoque, error: estoqueError }
+            vendasResult,
+            itensResult,
+            estoqueResult 
         ] = await Promise.all([
             supabaseClient.from('notas_fiscais').select('id, created_at, valor_total, contatos(nome_razao_social)'),
             supabaseClient.from('nota_fiscal_itens').select('produtos(nome), quantidade'),
-            calcularEstoqueCompleto() // Reutiliza a lógica de cálculo de estoque
+            calcularEstoqueCompleto() 
         ]);
 
-        if (vendasError || itensError || estoqueError) {
+        const { data: todasAsVendas, error: vendasError } = vendasResult;
+        const { data: todosOsItensVendidos, error: itensError } = itensResult;
+        const estoque = estoqueResult; // Erro estava aqui, agora corrigido
+
+        if (vendasError || itensError) {
             throw new Error('Falha ao buscar dados para o dashboard.');
         }
 
-        // 1. Filtrar Vendas pelo Período Selecionado
         const vendasFiltradas = filtrarVendasPorPeriodo(todasAsVendas, periodo);
 
-        // 2. Calcular KPIs
         const faturamentoBruto = vendasFiltradas.reduce((acc, venda) => acc + Number(venda.valor_total), 0);
         const vendasRealizadas = vendasFiltradas.length;
         const ticketMedio = vendasRealizadas > 0 ? faturamentoBruto / vendasRealizadas : 0;
         const insumosEstoqueBaixo = estoque.filter(item => item.estoqueAtual <= item.nivel_minimo_estoque && item.estoqueAtual > 0).length;
 
-        // 3. Calcular Widgets (Top Produtos e Clientes)
         const topProdutos = calcularTopProdutos(todosOsItensVendidos);
         const topClientes = calcularTopClientes(vendasFiltradas);
 
-        // 4. Exibir os resultados na tela
         document.getElementById('kpi-faturamento-bruto').textContent = `R$ ${faturamentoBruto.toFixed(2).replace('.', ',')}`;
         document.getElementById('kpi-vendas-realizadas').textContent = vendasRealizadas;
         document.getElementById('kpi-ticket-medio').textContent = `R$ ${ticketMedio.toFixed(2).replace('.', ',')}`;
