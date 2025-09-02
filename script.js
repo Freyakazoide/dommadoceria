@@ -30,6 +30,7 @@ function editarInsumo(id, nome, unidade, preco) {
     document.getElementById('edit-nome-insumo').value = nome;
     document.getElementById('edit-unidade-medida').value = unidade;
     document.getElementById('edit-preco-unitario').value = preco;
+    document.getElementById('edit-nivel_minimo_estoque').value = insumo ? insumo.nivel_minimo_estoque : 0;
     modal.style.display = 'block';
 }
 
@@ -506,11 +507,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     formInsumos.addEventListener('submit', async (event) => {
         event.preventDefault();
-        const { error } = await supabaseClient.from('insumos').insert([{ 
-            nome: document.getElementById('nome-insumo').value, 
-            unidade_medida: document.getElementById('unidade-medida').value, 
-            preco_unitario: document.getElementById('preco-unitario').value 
-        }]);
+const { error } = await supabaseClient.from('insumos').insert([{ 
+    nome: document.getElementById('nome-insumo').value, 
+    unidade_medida: document.getElementById('unidade-medida').value, 
+    preco_unitario: document.getElementById('preco-unitario').value,
+    nivel_minimo_estoque: document.getElementById('nivel_minimo_estoque').value
+}]);
         if (error) { showNotification('Ocorreu um erro ao salvar.', 'error'); } 
         else { showNotification('Insumo salvo!'); formInsumos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
@@ -518,11 +520,12 @@ document.addEventListener('DOMContentLoaded', () => {
     formEditarInsumo.addEventListener('submit', async (event) => {
         event.preventDefault();
         const id = document.getElementById('edit-insumo-id').value;
-        const { error } = await supabaseClient.from('insumos').update({ 
-            nome: document.getElementById('edit-nome-insumo').value, 
-            unidade_medida: document.getElementById('edit-unidade-medida').value, 
-            preco_unitario: document.getElementById('edit-preco-unitario').value 
-        }).match({ id });
+const { error } = await supabaseClient.from('insumos').update({ 
+    nome: document.getElementById('edit-nome-insumo').value, 
+    unidade_medida: document.getElementById('edit-unidade-medida').value, 
+    preco_unitario: document.getElementById('edit-preco-unitario').value,
+    nivel_minimo_estoque: document.getElementById('edit-nivel_minimo_estoque').value
+}).match({ id });
         if (error) { showNotification('Não foi possível salvar as alterações.', 'error'); } 
         else { showNotification('Insumo atualizado!'); document.getElementById('modal-editar-insumo').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });

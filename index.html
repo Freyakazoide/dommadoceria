@@ -56,12 +56,27 @@
 
             <section id="tela-insumos" class="tela hidden">
                 <h2>Estoque de Insumos</h2>
-                <form id="form-insumos">
-                    <input type="text" id="nome-insumo" placeholder="Nome do insumo" required>
-                    <input type="text" id="unidade-medida" placeholder="Unidade (kg, g, un)" required>
-                    <input type="number" id="preco-unitario" placeholder="Preço unitário" step="0.01" required>
-                    <button type="submit">Adicionar Insumo</button>
-                </form>
+<form id="form-insumos" class="form-grid">
+    <div class="form-group">
+        <label for="nome-insumo">Nome do Insumo</label>
+        <input type="text" id="nome-insumo" placeholder="Ex: Farinha de Trigo" required>
+    </div>
+    <div class="form-group">
+        <label for="unidade-medida">Unidade de Medida</label>
+        <input type="text" id="unidade-medida" placeholder="kg, g, un" required>
+    </div>
+    <div class="form-group">
+        <label for="preco-unitario">Preço de Compra (R$)</label>
+        <input type="number" id="preco-unitario" placeholder="2.50" step="0.01" required>
+    </div>
+    <div class="form-group">
+        <label for="nivel_minimo_estoque">Estoque Mínimo</label>
+        <input type="number" id="nivel_minimo_estoque" placeholder="Ex: 0.5" step="0.01" value="0" required>
+    </div>
+    <div class="form-group full-width">
+        <button type="submit">Adicionar Insumo</button>
+    </div>
+</form>
                 <hr>
                 <table class="tabela-bonita">
                     <thead>
@@ -284,13 +299,15 @@
                     <input type="text" id="filtro-busca-estoque" placeholder="Buscar por insumo...">
                 </div>
                 <table class="tabela-bonita">
-                    <thead>
-                        <tr>
-                            <th>Insumo</th>
-                            <th>Unidade de Medida</th>
-                            <th>Qtd. em Estoque</th>
-                        </tr>
-                    </thead>
+<thead>
+    <tr>
+        <th data-sort-estoque="nome" class="sortable">Insumo <span></span></th>
+        <th data-sort-estoque="unidade_medida" class="sortable">Unidade <span></span></th>
+        <th data-sort-estoque="estoqueAtual" class="sortable">Qtd. em Estoque <span></span></th>
+        <th data-sort-estoque="nivel_minimo_estoque" class="sortable">Estoque Mínimo <span></span></th>
+        <th>Status</th>
+    </tr>
+</thead>
                     <tbody id="corpo-tabela-estoque"></tbody>
                 </table>
             </section>
@@ -301,16 +318,26 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Editar Insumo</h2>
-            <form id="form-editar-insumo">
-                <input type="hidden" id="edit-insumo-id">
-                <label for="edit-nome-insumo">Nome do Insumo:</label>
-                <input type="text" id="edit-nome-insumo">
-                <label for="edit-unidade-medida">Unidade de Medida:</label>
-                <input type="text" id="edit-unidade-medida">
-                <label for="edit-preco-unitario">Preço Unitário (R$):</label>
-                <input type="number" id="edit-preco-unitario" step="0.01">
-                <button type="submit">Salvar Alterações</button>
-            </form>
+<form id="form-editar-insumo">
+    <input type="hidden" id="edit-insumo-id">
+    <div class="form-group">
+        <label for="edit-nome-insumo">Nome do Insumo:</label>
+        <input type="text" id="edit-nome-insumo">
+    </div>
+    <div class="form-group">
+        <label for="edit-unidade-medida">Unidade de Medida:</label>
+        <input type="text" id="edit-unidade-medida">
+    </div>
+    <div class="form-group">
+        <label for="edit-preco-unitario">Preço Unitário (R$):</label>
+        <input type="number" id="edit-preco-unitario" step="0.01">
+    </div>
+    <div class="form-group">
+        <label for="edit-nivel_minimo_estoque">Estoque Mínimo:</label>
+        <input type="number" id="edit-nivel_minimo_estoque" step="0.01">
+    </div>
+    <button type="submit">Salvar Alterações</button>
+</form>
         </div>
     </div>
     <div id="modal-gerenciar-produto" class="modal modal-grande">
