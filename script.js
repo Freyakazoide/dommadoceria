@@ -24,11 +24,10 @@ function parsePapeis(papeis) {
     return Array.isArray(papeis) ? papeis : [];
 }
 
-// script.js
+// Em script.js
 async function editarInsumo(id) {
     const modal = document.getElementById('modal-editar-insumo');
 
-    // 1. Busca os dados mais recentes do insumo no Supabase
     const { data: insumo, error } = await supabaseClient
         .from('insumos')
         .select('*')
@@ -41,13 +40,16 @@ async function editarInsumo(id) {
         return;
     }
 
-    // 2. Preenche o formulário com os dados retornados
     document.getElementById('edit-insumo-id').value = insumo.id;
     document.getElementById('edit-nome-insumo').value = insumo.nome;
     document.getElementById('edit-unidade-medida').value = insumo.unidade_medida;
-    document.getElementById('edit-preco-unitario').value = insumo.preco_unitario;
+    document.getElementById('edit-preco-unitario').value = Number(insumo.preco_unitario || 0).toFixed(4);
     document.getElementById('edit-nivel_minimo_estoque').value = insumo.nivel_minimo_estoque || 0;
-    
+
+    // Limpa os campos de cálculo para que o usuário possa inserir novos valores
+    document.getElementById('edit-preco-compra').value = '';
+    document.getElementById('edit-quantidade-compra').value = '';
+
     modal.style.display = 'block';
 }
 
@@ -555,41 +557,41 @@ formInsumos.addEventListener('submit', async (event) => {
     }
 });
     
-    formEditarInsumo.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const id = document.getElementById('edit-insumo-id').value;
-const { error } = await supabaseClient.from('insumos').update({ 
-    nome: document.getElementById('edit-nome-insumo').value, 
-    unidade_medida: document.getElementById('edit-unidade-medida').value, 
-    preco_unitario: document.getElementById('edit-preco-unitario').value,
-    nivel_minimo_estoque: document.getElementById('edit-nivel_minimo_estoque').value
-}).match({ id });
-        if (error) { showNotification('Não foi possível salvar as alterações.', 'error'); } 
-        else { showNotification('Insumo atualizado!'); document.getElementById('modal-editar-insumo').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
-    });
+// Em script.js
+formEditarInsumo.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const id = document.getElementById('edit-insumo-id').value;
 
-    function renderizarTabelaProdutos() {
-        const corpoTabela = document.getElementById('corpo-tabela-produtos');
-        corpoTabela.innerHTML = '';
-        if (!produtosData || produtosData.length === 0) {
-            corpoTabela.innerHTML = '<tr><td colspan="3">Nenhum produto cadastrado.</td></tr>';
-            return;
-        }
-        produtosData.forEach(produto => {
-            const tr = document.createElement('tr');
-            const precoVenda = produto.preco_venda ? `R$ ${Number(produto.preco_venda).toFixed(2)}` : '<span style="color: #aaa;">Não precificado</span>';
-            tr.innerHTML = `
-                <td>${produto.nome}</td>
-                <td><strong>${precoVenda}</strong></td>
-                <td class="actions-container">
-                    <button class="btn-acao btn-info" onclick="gerenciarProduto(${produto.id})">⚙️ Gerenciar</button>
-                    <button class="btn-acao btn-danger" onclick="deletarProduto(${produto.id}, '${produto.nome}')">🗑️</button>
-                </td>
-            `;
-            corpoTabela.appendChild(tr);
-        });
+    const precoCompra = parseFloat(document.getElementById('edit-preco-compra').value);
+    const quantidadeCompra = parseFloat(document.getElementById('edit-quantidade-compra').value);
+
+    let precoUnitarioFinal = parseFloat(document.getElementById('edit-preco-unitario').value);
+
+    // Se o usuário preencheu os novos dados de compra, recalcula o preço unitário
+    if (precoCompra && quantidadeCompra && quantidadeCompra > 0) {
+        precoUnitarioFinal = precoCompra / quantidadeCompra;
+        showNotification('Novo preço unitário calculado com base na compra!', 'info');
     }
-    
+
+    const dadosAtualizados = { 
+        nome: document.getElementById('edit-nome-insumo').value, 
+        unidade_medida: document.getElementById('edit-unidade-medida').value, 
+        preco_unitario: precoUnitarioFinal,
+        nivel_minimo_estoque: document.getElementById('edit-nivel_minimo_estoque').value
+    };
+
+    const { error } = await supabaseClient.from('insumos').update(dadosAtualizados).match({ id });
+
+    if (error) { 
+        showNotification('Não foi possível salvar as alterações.', 'error');
+        console.error(error);
+    } else { 
+        showNotification('Insumo atualizado!'); 
+        document.getElementById('modal-editar-insumo').style.display = 'none'; 
+        document.dispatchEvent(new CustomEvent('dadosAtualizados')); 
+    }
+});
+
     formProdutos.addEventListener('submit', async (event) => {
         event.preventDefault();
         const { error } = await supabaseClient.from('produtos').insert([{ nome: document.getElementById('nome-produto').value }]);
