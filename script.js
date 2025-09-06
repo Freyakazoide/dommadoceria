@@ -1421,3 +1421,118 @@ formAddNeItem.addEventListener('submit', (event) => {
         });
     });
 });
+
+async function migrarDadosInsumos() {
+    console.log("🚀 INICIANDO MIGRAÇÃO DE DADOS DE INSUMOS...");
+    
+    // 1. Mapeamento dos seus dados atuais para o novo formato
+    const dadosParaMigrar = [
+        { nomeAntigo: "Achocolatado Nescau", unidadeNova: "g", qtdEmbalagem: 350 },
+        { nomeAntigo: "Açucar Caravela", unidadeNova: "kg", qtdEmbalagem: 3 },
+        { nomeAntigo: "Açúcar Mascavo da casa", unidadeNova: "kg", qtdEmbalagem: 1 },
+        { nomeAntigo: "açucar refinado alto alegre", unidadeNova: "kg", qtdEmbalagem: 1 },
+        { nomeAntigo: "Amido de milho da casa", unidadeNova: "kg", qtdEmbalagem: 1 },
+        { nomeAntigo: "Bandeja de ovos", unidadeNova: "un", qtdEmbalagem: 20 },
+        { nomeAntigo: "caixa kraft branca 16,9x12x5 visor transparente", unidadeNova: "un", qtdEmbalagem: 1 },
+        { nomeAntigo: "Chantilly Norcau 1 litro", unidadeNova: "l", qtdEmbalagem: 1 },
+        { nomeAntigo: "Chocolate branco 2,1 kg sicao", unidadeNova: "kg", qtdEmbalagem: 2.1 },
+        { nomeAntigo: "Chocolate em pó Melken 100%, 500gr", unidadeNova: "g", qtdEmbalagem: 500 },
+        { nomeAntigo: "Chocolate em pó Melken 50% 1,010kg", unidadeNova: "kg", qtdEmbalagem: 1.010 },
+        { nomeAntigo: "Chocolate meio amargo Sicao", unidadeNova: "kg", qtdEmbalagem: 2.1 },
+        { nomeAntigo: "Cobertura meio amargo Sicao", unidadeNova: "kg", qtdEmbalagem: 2.1 },
+        { nomeAntigo: "Coco ralado médio da casa 1 Kg", unidadeNova: "kg", qtdEmbalagem: 1 },
+        { nomeAntigo: "Corante softgel vermelho natal", unidadeNova: "un", qtdEmbalagem: 1 },
+        { nomeAntigo: "Creme de leite CCGL 200GR, 20 unid.", unidadeNova: "un", qtdEmbalagem: 20 }, // Preço total para 20 unidades
+        { nomeAntigo: "Cremor de tártaro arcolor 40g", unidadeNova: "g", qtdEmbalagem: 40 },
+        { nomeAntigo: "Doce de leite 350gr tirol", unidadeNova: "g", qtdEmbalagem: 350 },
+        { nomeAntigo: "Doce de leite 800gr itambé", unidadeNova: "g", qtdEmbalagem: 800 },
+        { nomeAntigo: "Embalagem p/bolo base tampa 70M-branca", unidadeNova: "un", qtdEmbalagem: 1 },
+        { nomeAntigo: "Embalagem p/bolo base tampa PF 56", unidadeNova: "un", qtdEmbalagem: 1 },
+        { nomeAntigo: "Embalagem p/bolo base tampa PF 60", unidadeNova: "un", qtdEmbalagem: 1 },
+        { nomeAntigo: "Embalagem para trufas azul claro 14,5X15,5 c/100 unid. cromus", unidadeNova: "un", qtdEmbalagem: 100 },
+        { nomeAntigo: "Embalagem para trufas liso turquesa 14,5X15,5 com 100unid. cromus", unidadeNova: "un", qtdEmbalagem: 100 },
+        { nomeAntigo: "Embalagem para trufas rose gold 14,5X15,5 com 100unid. cromus", unidadeNova: "un", qtdEmbalagem: 100 },
+        { nomeAntigo: "Embalagem pote 145 ml com tampa, 850 embalagem", unidadeNova: "un", qtdEmbalagem: 850 },
+        { nomeAntigo: "Farinha de arroz sabor verde", unidadeNova: "kg", qtdEmbalagem: 1 },
+        { nomeAntigo: "farinha de trigo nordeste", unidadeNova: "kg", qtdEmbalagem: 1 },
+        { nomeAntigo: "Fécula de milho da casa", unidadeNova: "kg", qtdEmbalagem: 1 },
+        { nomeAntigo: "Filme PVC 50m", unidadeNova: "un", qtdEmbalagem: 1 }, // Assumido como 1 rolo
+        { nomeAntigo: "Fita cetin nº 01, 2 uni.", unidadeNova: "un", qtdEmbalagem: 2 },
+        { nomeAntigo: "Fita cetin nº 05, 1 uni.", unidadeNova: "un", qtdEmbalagem: 1 },
+        { nomeAntigo: "Fita cetin nº 09, 1 uni.", unidadeNova: "un", qtdEmbalagem: 1 },
+        { nomeAntigo: "Glucose de milho 1 kg", unidadeNova: "kg", qtdEmbalagem: 1 },
+        { nomeAntigo: "goiabada oliveira 300gr", unidadeNova: "g", qtdEmbalagem: 300 },
+        { nomeAntigo: "Granulado Chocolate ao leite Melken", unidadeNova: "g", qtdEmbalagem: 130 },
+        { nomeAntigo: "Granulado Chocolate Dori", unidadeNova: "un", qtdEmbalagem: 1 }, // Assumido como 1 pacote
+        { nomeAntigo: "Kit cortador coração com três peças", unidadeNova: "un", qtdEmbalagem: 1 },
+        { nomeAntigo: "Leite condensado 395 gr Piracanjuba, 15 unid,", unidadeNova: "un", qtdEmbalagem: 15 }, // Preço total para 15 unidades
+        { nomeAntigo: "Leite condensado tirol", unidadeNova: "un", qtdEmbalagem: 1 },
+        { nomeAntigo: "Leite em pó ninho 380gr", unidadeNova: "g", qtdEmbalagem: 380 },
+        { nomeAntigo: "Leite Integral de 01 litro, 1 unid.", unidadeNova: "l", qtdEmbalagem: 1 },
+        { nomeAntigo: "Manteiga Estrela do Campo", unidadeNova: "kg", qtdEmbalagem: 1 },
+        { nomeAntigo: "Margarina com sal Qualy 500gr", unidadeNova: "g", qtdEmbalagem: 500 },
+        { nomeAntigo: "Nescau nestle 2 kg 3 pacotes", unidadeNova: "kg", qtdEmbalagem: 6 }, // 3 pacotes de 2kg = 6kg total
+        { nomeAntigo: "Nutella creme de avelá 650gr", unidadeNova: "g", qtdEmbalagem: 650 },
+        { nomeAntigo: "Polvilho doce barra velha", unidadeNova: "kg", qtdEmbalagem: 1 }
+    ];
+
+    // 2. Busca todos os insumos existentes no banco de dados
+    const { data: insumosAtuais, error } = await supabaseClient.from('insumos').select('id, nome, preco_unitario');
+    if (error) {
+        console.error("ERRO: Falha ao buscar insumos do Supabase.", error);
+        alert("ERRO: Falha ao buscar insumos do Supabase. Veja o console.");
+        return;
+    }
+
+    let atualizacoes = [];
+    let erros = [];
+
+    // 3. Itera sobre os dados a serem migrados
+    for (const item of dadosParaMigrar) {
+        // Encontra o insumo correspondente no banco de dados (ignorando maiúsculas/minúsculas)
+        const insumoDB = insumosAtuais.find(i => i.nome.trim().toLowerCase() === item.nomeAntigo.trim().toLowerCase());
+
+        if (insumoDB) {
+            const precoAntigo = parseFloat(insumoDB.preco_unitario);
+            if (isNaN(precoAntigo) || item.qtdEmbalagem <= 0) {
+                erros.push(`ERRO DE CÁLCULO para "${item.nomeAntigo}": Preço ou quantidade inválida.`);
+                continue;
+            }
+            
+            // Calcula o novo preço unitário
+            const novoPrecoUnitario = precoAntigo / item.qtdEmbalagem;
+
+            atualizacoes.push({
+                id: insumoDB.id,
+                unidade_medida: item.unidadeNova,
+                preco_unitario: novoPrecoUnitario,
+                nome: insumoDB.nome // Mantém o nome original do DB
+            });
+            console.log(`✅ Preparado para atualizar "${item.nomeAntigo}" -> Preço unitário: ${novoPrecoUnitario.toFixed(4)}`);
+        } else {
+            erros.push(`AVISO: Insumo "${item.nomeAntigo}" não encontrado no banco de dados.`);
+        }
+    }
+
+    // 4. Executa a atualização em lote no Supabase
+    if (atualizacoes.length > 0) {
+        const { error: updateError } = await supabaseClient.from('insumos').upsert(atualizacoes);
+        
+        if (updateError) {
+            console.error("ERRO GERAL AO ATUALIZAR DADOS:", updateError);
+            alert("ERRO GERAL AO ATUALIZAR DADOS! Veja o console.");
+        } else {
+            console.log(`\n🎉 MIGRAÇÃO CONCLUÍDA! ${atualizacoes.length} insumos foram atualizados com sucesso!`);
+            alert(`🎉 MIGRAÇÃO CONCLUÍDA! ${atualizacoes.length} insumos foram atualizados com sucesso!`);
+        }
+    }
+
+    if (erros.length > 0) {
+        console.warn("\n⚠️ OCORRERAM OS SEGUINTES AVISOS/ERROS:");
+        erros.forEach(e => console.warn(e));
+        alert("A migração foi concluída, mas ocorreram alguns avisos. Verifique o console (F12) para mais detalhes.");
+    }
+    
+    // Dispara a atualização da interface
+    document.dispatchEvent(new CustomEvent('dadosAtualizados'));
+}
