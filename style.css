@@ -638,3 +638,49 @@ th.sortable span {
 .dashboard-widget canvas {
     max-height: 400px;
 }
+
+/* --- TELA DE LOGIN --- */
+#login-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--cor-fundo-app);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.login-box {
+    background-color: white;
+    padding: 2.5rem;
+    border-radius: var(--raio-borda);
+    box-shadow: var(--sombra-media);
+    text-align: center;
+    width: 100%;
+    max-width: 380px;
+}
+
+.login-logo {
+    max-width: 100px;
+    margin-bottom: 1rem;
+}
+
+#form-login input {
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+#form-login button {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.error-message {
+    color: var(--cor-perigo);
+    margin-top: 1rem;
+    font-weight: 500;
+    height: 20px;
+}

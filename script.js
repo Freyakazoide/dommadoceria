@@ -1,5 +1,3 @@
-const SUPABASE_URL = 'https://bujffxasexuglgmtloxv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1amZmeGFzZXh1Z2xnbXRsb3h2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTY1NDAsImV4cCI6MjA3MTEzMjU0MH0.OmbttnQ6ThFCYuspr3IL2b25RULx_ZqoXUfcoN7KF_M';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 function showNotification(message, type = 'success') {
@@ -24,7 +22,6 @@ function parsePapeis(papeis) {
     return Array.isArray(papeis) ? papeis : [];
 }
 
-// Em script.js
 async function editarInsumo(id) {
     const modal = document.getElementById('modal-editar-insumo');
     const { data: insumo, error } = await supabaseClient.from('insumos').select('*').eq('id', id).single();
@@ -36,11 +33,8 @@ async function editarInsumo(id) {
     document.getElementById('edit-unidade-medida').value = insumo.unidade_medida;
     document.getElementById('edit-preco-unitario').value = Number(insumo.preco_unitario || 0).toFixed(4);
     document.getElementById('edit-nivel_minimo_estoque').value = insumo.nivel_minimo_estoque || 0;
-
-    // CARREGANDO OS DADOS DA ÚLTIMA COMPRA
     document.getElementById('edit-preco-compra').value = insumo.ultimo_preco_compra || '';
     document.getElementById('edit-quantidade-compra').value = insumo.ultima_qtd_embalagem || '';
-
     modal.style.display = 'block';
 }
 
@@ -63,40 +57,35 @@ async function gerenciarProduto(produtoId) {
     const modal = document.getElementById('modal-gerenciar-produto');
     const { data: produto, error } = await supabaseClient.from('produtos').select('*').eq('id', produtoId).single();
     if (error) { return showNotification('Erro ao carregar dados do produto.', 'error'); }
-    
     document.getElementById('nome-produto-modal').textContent = produto.nome;
     document.getElementById('gerenciar-produto-id').value = produto.id;
     document.getElementById('preco-final-definido').value = produto.preco_venda ? Number(produto.preco_venda).toFixed(2) : '';
-    
     document.getElementById('lista-custos-adicionais').innerHTML = '';
     adicionarCampoDeCusto('Embalagem', 2.50);
     adicionarCampoDeCusto('Mão de Obra', 5.00);
-
     await carregarIngredientesNoModal(produtoId);
     modal.style.display = 'block';
 }
 
 async function deletarProduto(id, nome) {
     if (!confirm(`DELETAR PRODUTO "${nome}"?\n\nATENÇÃO: Todas as receitas e notas fiscais associadas a ele também serão apagadas!`)) return;
-    
     await supabaseClient.from('nota_fiscal_itens').delete().match({ produto_id: id });
     await supabaseClient.from('receitas').delete().match({ produto_id: id });
     const { error } = await supabaseClient.from('produtos').delete().match({ id: id });
-
-    if (error) { 
-        showNotification(`Erro ao deletar o produto "${nome}".`, 'error'); 
+    if (error) {
+        showNotification(`Erro ao deletar o produto "${nome}".`, 'error');
         console.error('Erro ao deletar produto:', error);
-    } 
-    else { 
-        showNotification(`Produto "${nome}" deletado com sucesso!`); 
-        document.dispatchEvent(new CustomEvent('dadosAtualizados')); 
+    }
+    else {
+        showNotification(`Produto "${nome}" deletado com sucesso!`);
+        document.dispatchEvent(new CustomEvent('dadosAtualizados'));
     }
 }
 
 async function removerIngrediente(receitaItemId) {
     const { error } = await supabaseClient.from('receitas').delete().match({ id: receitaItemId });
     if (error) { showNotification('Erro ao remover ingrediente.', 'error'); }
-    else { 
+    else {
         const produtoId = document.getElementById('gerenciar-produto-id').value;
         carregarIngredientesNoModal(produtoId);
     }
@@ -106,18 +95,15 @@ async function editarContato(contatoId) {
     const modal = document.getElementById('modal-editar-contato');
     const { data: contato, error } = await supabaseClient.from('contatos').select('*').eq('id', contatoId).single();
     if (error) return showNotification('Erro ao carregar dados do contato.', 'error');
-
     document.getElementById('edit-contato-id').value = contato.id;
     document.getElementById('edit-contato-nome').value = contato.nome_razao_social;
     document.getElementById('edit-contato-documento').value = contato.cpf_cnpj;
     document.getElementById('edit-contato-telefone').value = contato.telefone;
     document.getElementById('edit-contato-email').value = contato.email;
     document.getElementById('edit-contato-endereco').value = contato.endereco;
-    
     const papeis = parsePapeis(contato.papeis);
     document.getElementById('edit-contato-e-cliente').checked = papeis.includes('Cliente');
     document.getElementById('edit-contato-e-fornecedor').checked = papeis.includes('Fornecedor');
-    
     document.querySelector(`input[name="edit_tipo_pessoa"][value="${contato.tipo_pessoa}"]`).checked = true;
     atualizarLabelsFormularioContato('edit-');
     modal.style.display = 'block';
@@ -175,12 +161,10 @@ function recalcularAnaliseDeCustos() {
     document.querySelectorAll('.custo-adicional-item .custo-valor').forEach(input => {
         outrosCustos += parseFloat(input.value) || 0;
     });
-    
     const custoTotal = custoIngredientes + outrosCustos;
     const margem = parseFloat(document.getElementById('margem-lucro').value) || 0;
     const lucro = custoTotal * (margem / 100);
     const precoSugerido = custoTotal + lucro;
-
     document.getElementById('custo-ingredientes-valor').textContent = `R$ ${custoIngredientes.toFixed(2)}`;
     document.getElementById('custo-total-valor').textContent = `R$ ${custoTotal.toFixed(2)}`;
     document.getElementById('preco-sugerido-valor').textContent = `R$ ${precoSugerido.toFixed(2)}`;
@@ -191,13 +175,10 @@ async function verDetalhesNota(notaId) {
     const container = document.getElementById('detalhes-nota-conteudo');
     container.innerHTML = '<p>Carregando...</p>';
     modal.style.display = 'block';
-
     const { data: nota, error } = await supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`).eq('id', notaId).single();
     if (error) { container.innerHTML = '<p>Erro ao carregar detalhes.</p>'; return; }
-
     const { data: itens, errorItens } = await supabaseClient.from('nota_fiscal_itens').select(`*, produtos(nome)`).eq('nota_fiscal_id', notaId);
     if (errorItens) { container.innerHTML = '<p>Erro ao carregar itens da nota.</p>'; return; }
-
     let html = `
         <p><strong>Cliente:</strong> ${nota.contatos.nome_razao_social}</p>
         <p><strong>Data:</strong> ${new Date(nota.created_at).toLocaleDateString('pt-BR')}</p>
@@ -228,8 +209,8 @@ async function deletarNota(notaId) {
     await supabaseClient.from('nota_fiscal_itens').delete().match({ nota_fiscal_id: notaId });
     const { error } = await supabaseClient.from('notas_fiscais').delete().match({ id: notaId });
     if (error) { showNotification('Erro ao deletar a nota fiscal.', 'error'); }
-    else { 
-        showNotification('Nota fiscal deletada com sucesso.'); 
+    else {
+        showNotification('Nota fiscal deletada com sucesso.');
         document.dispatchEvent(new CustomEvent('dadosAtualizados'));
     }
 }
@@ -257,7 +238,7 @@ function renderizarItensNs() {
     document.getElementById('edit-ns-valor-total').textContent = `R$ ${total.toFixed(2)}`;
 }
 
-window.removerItemNs = function(index) {
+window.removerItemNs = function (index) {
     editNsItens.splice(index, 1);
     renderizarItensNs();
 }
@@ -266,17 +247,13 @@ async function editarNotaSaida(notaId) {
     const modal = document.getElementById('modal-editar-nota-saida');
     document.getElementById('edit-ns-hidden-id').value = notaId;
     document.getElementById('edit-ns-id').textContent = `(#${notaId})`;
-
     const { data: nota, error } = await supabaseClient.from('notas_fiscais').select(`*, contatos(id)`).eq('id', notaId).single();
     if (error) return showNotification('Erro ao carregar dados da nota.', 'error');
-
     const { data: itens, errorItens } = await supabaseClient.from('nota_fiscal_itens').select(`*, produtos(*)`).eq('nota_fiscal_id', notaId);
     if (errorItens) return showNotification('Erro ao carregar itens da nota.', 'error');
-    
     document.getElementById('edit-ns-cliente').value = nota.contatos.id;
     document.getElementById('edit-ns-metodo-pagamento').value = nota.metodo_pagamento;
     document.getElementById('edit-ns-status-pagamento').value = nota.status_pagamento;
-    
     editNsItens = itens.map(item => ({
         id: item.id,
         produto_id: item.produtos.id,
@@ -285,7 +262,6 @@ async function editarNotaSaida(notaId) {
         preco_unitario_momento: parseFloat(item.preco_unitario_momento)
     }));
     renderizarItensNs();
-    
     modal.style.display = 'block';
 }
 
@@ -294,13 +270,10 @@ async function verDetalhesNotaEntrada(notaId) {
     const container = document.getElementById('detalhes-ne-conteudo');
     container.innerHTML = '<p>Carregando...</p>';
     modal.style.display = 'block';
-
     const { data: nota, error } = await supabaseClient.from('notas_entrada').select(`*, contatos(nome_razao_social)`).eq('id', notaId).single();
     if (error) { container.innerHTML = '<p>Erro ao carregar detalhes da compra.</p>'; return; }
-
     const { data: itens, errorItens } = await supabaseClient.from('nota_entrada_itens').select(`*, insumos(nome, unidade_medida)`).eq('nota_entrada_id', notaId);
     if (errorItens) { container.innerHTML = '<p>Erro ao carregar insumos da compra.</p>'; return; }
-
     let html = `
         <p><strong>Fornecedor:</strong> ${nota.contatos.nome_razao_social}</p>
         <p><strong>Data da Compra:</strong> ${new Date(nota.data_compra).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</p>
@@ -340,7 +313,7 @@ function renderizarItensNeEdicao() {
     document.getElementById('edit-ne-valor-total').textContent = `R$ ${total.toFixed(2)}`;
 }
 
-window.removerItemNeEdicao = function(index) {
+window.removerItemNeEdicao = function (index) {
     editNeItens.splice(index, 1);
     renderizarItensNeEdicao();
 }
@@ -349,16 +322,12 @@ async function editarNotaEntrada(notaId) {
     const modal = document.getElementById('modal-editar-nota-entrada');
     document.getElementById('edit-ne-hidden-id').value = notaId;
     document.getElementById('edit-ne-id').textContent = `(#${notaId})`;
-
     const { data: nota, error } = await supabaseClient.from('notas_entrada').select(`*, contatos(id)`).eq('id', notaId).single();
     if (error) return showNotification('Erro ao carregar dados da compra.', 'error');
-
     const { data: itens, errorItens } = await supabaseClient.from('nota_entrada_itens').select(`*, insumos(*)`).eq('nota_entrada_id', notaId);
     if (errorItens) return showNotification('Erro ao carregar itens da compra.', 'error');
-
     document.getElementById('edit-ne-fornecedor').value = nota.contatos.id;
     document.getElementById('edit-ne-data').value = nota.data_compra;
-
     editNeItens = itens.map(item => ({
         id: item.id,
         insumo_id: item.insumos.id,
@@ -367,7 +336,6 @@ async function editarNotaEntrada(notaId) {
         preco_unitario_momento: parseFloat(item.preco_unitario_momento)
     }));
     renderizarItensNeEdicao();
-    
     modal.style.display = 'block';
 }
 
@@ -375,16 +343,15 @@ async function deletarNotaEntrada(notaId) {
     if (!confirm('TEM CERTEZA QUE QUER DELETAR ESTA NOTA DE COMPRA?\nEsta ação não pode ser desfeita.')) return;
     await supabaseClient.from('nota_entrada_itens').delete().match({ nota_entrada_id: notaId });
     const { error } = await supabaseClient.from('notas_entrada').delete().match({ id: notaId });
-    if (error) { 
+    if (error) {
         showNotification('Erro ao deletar a nota de compra.', 'error');
         console.error("Erro ao deletar NE:", error);
     }
-    else { 
-        showNotification('Nota de compra deletada com sucesso.'); 
+    else {
+        showNotification('Nota de compra deletada com sucesso.');
         document.dispatchEvent(new CustomEvent('dadosAtualizados'));
     }
 }
-
 
 function atualizarLabelsFormularioContato(prefixo = '') {
     const radioName = prefixo ? 'edit_tipo_pessoa' : 'tipo_pessoa';
@@ -394,7 +361,6 @@ function atualizarLabelsFormularioContato(prefixo = '') {
     const labelDocumento = document.getElementById(`${prefixo}label-documento-contato`);
     const inputNome = document.getElementById(`${prefixo}contato-nome`);
     const inputDocumento = document.getElementById(`${prefixo}contato-documento`);
-
     if (tipo === 'Física') {
         labelNome.textContent = 'Nome Completo';
         inputNome.placeholder = 'Nome do cliente';
@@ -409,7 +375,6 @@ function atualizarLabelsFormularioContato(prefixo = '') {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    
     let insumosData = [];
     let produtosData = [];
     let contatosData = [];
@@ -417,58 +382,49 @@ document.addEventListener('DOMContentLoaded', () => {
     let notasEntradaData = [];
     let nfItens = [];
     let neItens = [];
-
     let currentPage = 1;
     let rowsPerPage = 20;
     let sortColumn = 'created_at';
     let sortDirection = 'desc';
-    
     let currentPageEntrada = 1;
     let rowsPerPageEntrada = 20;
     let sortColumnEntrada = 'data_compra';
     let sortDirectionEntrada = 'desc';
+    
     const selectInsumoReceita = document.getElementById('select-insumo-receita');
-const selectUnidadeReceita = document.getElementById('select-unidade-receita');
-const infoUnidadeBase = document.getElementById('info-unidade-base');
+    const selectUnidadeReceita = document.getElementById('select-unidade-receita');
+    const infoUnidadeBase = document.getElementById('info-unidade-base');
 
-// Mapa de unidades compatíveis
-const unidadesCompativeis = {
-    g: ['g', 'kg'],
-    kg: ['g', 'kg'],
-    ml: ['ml', 'l'],
-    l: ['ml', 'l'],
-    un: ['un']
-};
+    const unidadesCompativeis = {
+        g: ['g', 'kg'],
+        kg: ['g', 'kg'],
+        ml: ['ml', 'l'],
+        l: ['ml', 'l'],
+        un: ['un']
+    };
 
-// Fatores de conversão PARA A UNIDADE BASE
-const fatoresConversao = {
-    g: { g: 1, kg: 1000 },
-    kg: { g: 0.001, kg: 1 },
-    ml: { ml: 1, l: 1000 },
-    l: { ml: 0.001, l: 1 },
-    un: { un: 1 }
-};
+    const fatoresConversao = {
+        g: { g: 1, kg: 1000 },
+        kg: { g: 0.001, kg: 1 },
+        ml: { ml: 1, l: 1000 },
+        l: { ml: 0.001, l: 1 },
+        un: { un: 1 }
+    };
 
-// Evento que dispara quando o usuário escolhe um insumo
-selectInsumoReceita.addEventListener('change', () => {
-    const insumoId = selectInsumoReceita.value;
-    if (!insumoId) {
-        infoUnidadeBase.textContent = '';
-        selectUnidadeReceita.innerHTML = '';
-        return;
-    }
-
-    const insumo = insumosData.find(i => i.id == insumoId);
-    if (!insumo) return;
-
-    const unidadeBase = insumo.unidade_medida;
-    infoUnidadeBase.textContent = `A unidade de medida base deste insumo é: ${unidadeBase}`;
-
-    // Popula o seletor de unidades com as opções compatíveis
-    const opcoes = unidadesCompativeis[unidadeBase] || [unidadeBase];
-    selectUnidadeReceita.innerHTML = opcoes.map(u => `<option value="${u}">${u}</option>`).join('');
-});
-
+    selectInsumoReceita.addEventListener('change', () => {
+        const insumoId = selectInsumoReceita.value;
+        if (!insumoId) {
+            infoUnidadeBase.textContent = '';
+            selectUnidadeReceita.innerHTML = '';
+            return;
+        }
+        const insumo = insumosData.find(i => i.id == insumoId);
+        if (!insumo) return;
+        const unidadeBase = insumo.unidade_medida;
+        infoUnidadeBase.textContent = `A unidade de medida base deste insumo é: ${unidadeBase}`;
+        const opcoes = unidadesCompativeis[unidadeBase] || [unidadeBase];
+        selectUnidadeReceita.innerHTML = opcoes.map(u => `<option value="${u}">${u}</option>`).join('');
+    });
 
     const navLinks = document.querySelectorAll('.nav-link');
     const telas = document.querySelectorAll('.main-content .tela');
@@ -494,7 +450,6 @@ selectInsumoReceita.addEventListener('change', () => {
         telas.forEach(tela => tela.classList.add('hidden'));
         const telaAlvo = document.getElementById(targetId);
         if (telaAlvo) telaAlvo.classList.remove('hidden');
-
         navLinks.forEach(link => {
             link.classList.remove('active');
             if (link.dataset.target === targetId) {
@@ -509,13 +464,14 @@ selectInsumoReceita.addEventListener('change', () => {
             mostrarTela(link.dataset.target);
         });
     });
-    
+
     modals.forEach(modal => {
         const closeButton = modal.querySelector('.close-button');
         if (closeButton) {
             closeButton.onclick = () => modal.style.display = 'none';
         }
     });
+
     window.onclick = (event) => {
         if (event.target.classList.contains('modal')) {
             event.target.style.display = 'none';
@@ -527,171 +483,146 @@ selectInsumoReceita.addEventListener('change', () => {
             const parentNav = e.target.closest('.sub-nav');
             parentNav.querySelectorAll('.sub-nav-link').forEach(l => l.classList.remove('active'));
             e.target.classList.add('active');
-            
             const parentTela = e.target.closest('.tela');
             parentTela.querySelectorAll('.subtela').forEach(s => s.classList.add('hidden'));
             document.getElementById(link.dataset.target).classList.remove('hidden');
         });
     });
 
-// Em script.js
-function renderizarTabelaInsumos() {
-    const corpoTabela = document.getElementById('corpo-tabela-insumos');
-    corpoTabela.innerHTML = '';
-    if (!insumosData || insumosData.length === 0) {
-        // Aumentamos o colspan para 6
-        corpoTabela.innerHTML = '<tr><td colspan="6">Nenhum insumo cadastrado.</td></tr>';
-        return;
+    function renderizarTabelaInsumos() {
+        const corpoTabela = document.getElementById('corpo-tabela-insumos');
+        corpoTabela.innerHTML = '';
+        if (!insumosData || insumosData.length === 0) {
+            corpoTabela.innerHTML = '<tr><td colspan="6">Nenhum insumo cadastrado.</td></tr>';
+            return;
+        }
+        insumosData.forEach(insumo => {
+            const tr = document.createElement('tr');
+            const precoEmbalagem = insumo.ultimo_preco_compra ? `R$ ${Number(insumo.ultimo_preco_compra).toFixed(2)}` : '---';
+            const qtdEmbalagem = insumo.ultima_qtd_embalagem ? `${Number(insumo.ultima_qtd_embalagem)} ${insumo.unidade_medida}` : '---';
+            const precoUnitario = insumo.preco_unitario ? `R$ ${Number(insumo.preco_unitario).toFixed(4)}` : '---';
+            const estoqueMinimo = insumo.nivel_minimo_estoque ? `${Number(insumo.nivel_minimo_estoque)} ${insumo.unidade_medida}` : '---';
+            tr.innerHTML = `
+                <td>${insumo.nome}</td>
+                <td><strong>${precoEmbalagem}</strong></td>
+                <td>${qtdEmbalagem}</td>
+                <td>${precoUnitario}</td>
+                <td>${estoqueMinimo}</td> 
+                <td class="actions-container">
+                    <button class="btn-acao btn-warning" onclick="editarInsumo(${insumo.id})">✏️</button>
+                    <button class="btn-acao btn-danger" onclick="deletarInsumo(${insumo.id}, '${insumo.nome}')">🗑️</button>
+                </td>
+            `;
+            corpoTabela.appendChild(tr);
+        });
     }
-    insumosData.forEach(insumo => {
-        const tr = document.createElement('tr');
-        
-        // Formata os valores, tratando os que podem ser nulos (para itens antigos)
-        const precoEmbalagem = insumo.ultimo_preco_compra ? `R$ ${Number(insumo.ultimo_preco_compra).toFixed(2)}` : '---';
-        const qtdEmbalagem = insumo.ultima_qtd_embalagem ? `${Number(insumo.ultima_qtd_embalagem)} ${insumo.unidade_medida}` : '---';
-        const precoUnitario = insumo.preco_unitario ? `R$ ${Number(insumo.preco_unitario).toFixed(4)}` : '---';
-        const estoqueMinimo = insumo.nivel_minimo_estoque ? `${Number(insumo.nivel_minimo_estoque)} ${insumo.unidade_medida}` : '---';
-        
-        tr.innerHTML = `
-            <td>${insumo.nome}</td>
-            <td><strong>${precoEmbalagem}</strong></td>
-            <td>${qtdEmbalagem}</td>
-            <td>${precoUnitario}</td>
-            <td>${estoqueMinimo}</td> 
-            <td class="actions-container">
-                <button class="btn-acao btn-warning" onclick="editarInsumo(${insumo.id})">✏️</button>
-                <button class="btn-acao btn-danger" onclick="deletarInsumo(${insumo.id}, '${insumo.nome}')">🗑️</button>
-            </td>
-        `;
-        corpoTabela.appendChild(tr);
+
+    function renderizarTabelaProdutos() {
+        const corpoTabela = document.getElementById('corpo-tabela-produtos');
+        corpoTabela.innerHTML = '';
+        if (!produtosData || produtosData.length === 0) {
+            corpoTabela.innerHTML = '<tr><td colspan="3">Nenhum produto cadastrado.</td></tr>';
+            return;
+        }
+        produtosData.forEach(produto => {
+            const tr = document.createElement('tr');
+            const precoVenda = produto.preco_venda ? `R$ ${Number(produto.preco_venda).toFixed(2)}` : '<span style="color: #aaa;">Não precificado</span>';
+            tr.innerHTML = `
+                <td>${produto.nome}</td>
+                <td><strong>${precoVenda}</strong></td>
+                <td class="actions-container">
+                    <button class="btn-acao btn-info" onclick="gerenciarProduto(${produto.id})">⚙️ Gerenciar</button>
+                    <button class="btn-acao btn-danger" onclick="deletarProduto(${produto.id}, '${produto.nome}')">🗑️</button>
+                </td>
+            `;
+            corpoTabela.appendChild(tr);
+        });
+    }
+
+    formInsumos.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const precoCompra = parseFloat(document.getElementById('preco-compra').value);
+        const quantidadeCompra = parseFloat(document.getElementById('quantidade-compra').value);
+        if (quantidadeCompra <= 0) {
+            return showNotification('A quantidade na embalagem deve ser maior que zero.', 'error');
+        }
+        const precoUnitarioCalculado = precoCompra / quantidadeCompra;
+        const { error } = await supabaseClient.from('insumos').insert([{
+            nome: document.getElementById('nome-insumo').value,
+            unidade_medida: document.getElementById('unidade-medida').value,
+            preco_unitario: precoUnitarioCalculado,
+            nivel_minimo_estoque: document.getElementById('nivel_minimo_estoque').value,
+            ultimo_preco_compra: precoCompra,
+            ultima_qtd_embalagem: quantidadeCompra
+        }]);
+        if (error) {
+            showNotification('Ocorreu um erro ao salvar.', 'error'); console.error(error);
+        } else {
+            showNotification('Insumo salvo com sucesso!'); formInsumos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados'));
+        }
     });
-}
 
-// Cole esta função logo após o final da função renderizarTabelaInsumos
-function renderizarTabelaProdutos() {
-    const corpoTabela = document.getElementById('corpo-tabela-produtos');
-    corpoTabela.innerHTML = '';
-    if (!produtosData || produtosData.length === 0) {
-        corpoTabela.innerHTML = '<tr><td colspan="3">Nenhum produto cadastrado.</td></tr>';
-        return;
-    }
-    produtosData.forEach(produto => {
-        const tr = document.createElement('tr');
-        // O 'preco_venda' pode ser nulo, então tratamos isso para exibição
-        const precoVenda = produto.preco_venda ? `R$ ${Number(produto.preco_venda).toFixed(2)}` : '<span style="color: #aaa;">Não precificado</span>';
-        tr.innerHTML = `
-            <td>${produto.nome}</td>
-            <td><strong>${precoVenda}</strong></td>
-            <td class="actions-container">
-                <button class="btn-acao btn-info" onclick="gerenciarProduto(${produto.id})">⚙️ Gerenciar</button>
-                <button class="btn-acao btn-danger" onclick="deletarProduto(${produto.id}, '${produto.nome}')">🗑️</button>
-            </td>
-        `;
-        corpoTabela.appendChild(tr);
+    formEditarInsumo.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = document.getElementById('edit-insumo-id').value;
+        const precoCompra = parseFloat(document.getElementById('edit-preco-compra').value);
+        const quantidadeCompra = parseFloat(document.getElementById('edit-quantidade-compra').value);
+        let precoUnitarioFinal = parseFloat(document.getElementById('edit-preco-unitario').value);
+        if (precoCompra && quantidadeCompra && quantidadeCompra > 0) {
+            precoUnitarioFinal = precoCompra / quantidadeCompra;
+        }
+        const dadosAtualizados = {
+            nome: document.getElementById('edit-nome-insumo').value,
+            unidade_medida: document.getElementById('edit-unidade-medida').value,
+            preco_unitario: precoUnitarioFinal,
+            nivel_minimo_estoque: document.getElementById('edit-nivel_minimo_estoque').value,
+            ultimo_preco_compra: precoCompra,
+            ultima_qtd_embalagem: quantidadeCompra
+        };
+        const { error } = await supabaseClient.from('insumos').update(dadosAtualizados).match({ id });
+        if (error) {
+            showNotification('Não foi possível salvar as alterações.', 'error');
+        } else {
+            showNotification('Insumo atualizado!'); document.getElementById('modal-editar-insumo').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados'));
+        }
     });
-}
-
-formInsumos.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const precoCompra = parseFloat(document.getElementById('preco-compra').value);
-    const quantidadeCompra = parseFloat(document.getElementById('quantidade-compra').value);
-    if (quantidadeCompra <= 0) {
-        return showNotification('A quantidade na embalagem deve ser maior que zero.', 'error');
-    }
-    const precoUnitarioCalculado = precoCompra / quantidadeCompra;
-
-    const { error } = await supabaseClient.from('insumos').insert([{ 
-        nome: document.getElementById('nome-insumo').value, 
-        unidade_medida: document.getElementById('unidade-medida').value, 
-        preco_unitario: precoUnitarioCalculado,
-        nivel_minimo_estoque: document.getElementById('nivel_minimo_estoque').value,
-        // SALVANDO OS NOVOS CAMPOS
-        ultimo_preco_compra: precoCompra,
-        ultima_qtd_embalagem: quantidadeCompra
-    }]);
-
-    if (error) { 
-        showNotification('Ocorreu um erro ao salvar.', 'error'); console.error(error);
-    } else { 
-        showNotification('Insumo salvo com sucesso!'); formInsumos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); 
-    }
-});
-    
-// Em script.js
-formEditarInsumo.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const id = document.getElementById('edit-insumo-id').value;
-    const precoCompra = parseFloat(document.getElementById('edit-preco-compra').value);
-    const quantidadeCompra = parseFloat(document.getElementById('edit-quantidade-compra').value);
-    let precoUnitarioFinal = parseFloat(document.getElementById('edit-preco-unitario').value);
-
-    if (precoCompra && quantidadeCompra && quantidadeCompra > 0) {
-        precoUnitarioFinal = precoCompra / quantidadeCompra;
-    }
-
-    const dadosAtualizados = { 
-        nome: document.getElementById('edit-nome-insumo').value, 
-        unidade_medida: document.getElementById('edit-unidade-medida').value, 
-        preco_unitario: precoUnitarioFinal,
-        nivel_minimo_estoque: document.getElementById('edit-nivel_minimo_estoque').value,
-        // SALVANDO AS ALTERAÇÕES DOS NOVOS CAMPOS
-        ultimo_preco_compra: precoCompra,
-        ultima_qtd_embalagem: quantidadeCompra
-    };
-
-    const { error } = await supabaseClient.from('insumos').update(dadosAtualizados).match({ id });
-    if (error) { 
-        showNotification('Não foi possível salvar as alterações.', 'error');
-    } else { 
-        showNotification('Insumo atualizado!'); document.getElementById('modal-editar-insumo').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados')); 
-    }
-});
 
     formProdutos.addEventListener('submit', async (event) => {
         event.preventDefault();
         const { error } = await supabaseClient.from('produtos').insert([{ nome: document.getElementById('nome-produto').value }]);
-        if (error) { showNotification('Erro ao salvar produto.', 'error'); } 
+        if (error) { showNotification('Erro ao salvar produto.', 'error'); }
         else { showNotification('Produto salvo!'); formProdutos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
-formAdicionarIngrediente.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    
-    const produtoId = document.getElementById('gerenciar-produto-id').value;
-    const insumoId = selectInsumoReceita.value;
-    const insumoSelecionado = insumosData.find(i => i.id == insumoId);
+    formAdicionarIngrediente.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const produtoId = document.getElementById('gerenciar-produto-id').value;
+        const insumoId = selectInsumoReceita.value;
+        const insumoSelecionado = insumosData.find(i => i.id == insumoId);
+        if (!insumoSelecionado) {
+            return showNotification('Erro: Insumo não encontrado.', 'error');
+        }
+        const quantidadeReceita = parseFloat(document.getElementById('quantidade-ingrediente').value);
+        const unidadeReceita = selectUnidadeReceita.value;
+        const unidadeBaseInsumo = insumoSelecionado.unidade_medida;
+        const fator = fatoresConversao[unidadeBaseInsumo][unidadeReceita];
+        const quantidadeNaBase = quantidadeReceita * fator;
+        const { error } = await supabaseClient.from('receitas').insert([{
+            produto_id: produtoId,
+            insumo_id: insumoId,
+            quantidade: quantidadeNaBase
+        }]);
+        if (error) {
+            showNotification('Erro ao adicionar ingrediente.', 'error');
+            console.error(error);
+        } else {
+            showNotification(`Ingrediente adicionado (${quantidadeReceita} ${unidadeReceita}).`);
+            document.getElementById('quantidade-ingrediente').value = '';
+            document.getElementById('quantidade-ingrediente').focus();
+            carregarIngredientesNoModal(produtoId);
+        }
+    });
 
-    if (!insumoSelecionado) {
-        return showNotification('Erro: Insumo não encontrado.', 'error');
-    }
-
-    const quantidadeReceita = parseFloat(document.getElementById('quantidade-ingrediente').value);
-    const unidadeReceita = selectUnidadeReceita.value;
-    const unidadeBaseInsumo = insumoSelecionado.unidade_medida;
-
-    // Converte a quantidade da receita para a unidade base do insumo
-    const fator = fatoresConversao[unidadeBaseInsumo][unidadeReceita];
-    const quantidadeNaBase = quantidadeReceita * fator;
-
-    const { error } = await supabaseClient.from('receitas').insert([{ 
-        produto_id: produtoId, 
-        insumo_id: insumoId, 
-        quantidade: quantidadeNaBase // Salva a quantidade convertida
-    }]);
-
-    if (error) { 
-        showNotification('Erro ao adicionar ingrediente.', 'error'); 
-        console.error(error);
-    } else { 
-        showNotification(`Ingrediente adicionado (${quantidadeReceita} ${unidadeReceita}).`);
-        // Reseta apenas os campos de quantidade e foca nele
-        document.getElementById('quantidade-ingrediente').value = '';
-        document.getElementById('quantidade-ingrediente').focus();
-        
-        carregarIngredientesNoModal(produtoId); 
-    }
-});
-    
     document.getElementById('btn-adicionar-custo').onclick = () => adicionarCampoDeCusto();
     document.getElementById('margem-lucro').addEventListener('input', recalcularAnaliseDeCustos);
 
@@ -700,8 +631,8 @@ formAdicionarIngrediente.addEventListener('submit', async (event) => {
         const precoFinal = document.getElementById('preco-final-definido').value;
         if (!precoFinal || precoFinal <= 0) { return showNotification('Defina um preço de venda válido.', 'error'); }
         const { error } = await supabaseClient.from('produtos').update({ preco_venda: precoFinal }).match({ id: produtoId });
-        if (error) { showNotification('Erro ao salvar o preço.', 'error'); } 
-        else { 
+        if (error) { showNotification('Erro ao salvar o preço.', 'error'); }
+        else {
             showNotification('Preço de venda salvo com sucesso!');
             document.getElementById('modal-gerenciar-produto').style.display = 'none';
             document.dispatchEvent(new CustomEvent('dadosAtualizados'));
@@ -743,7 +674,6 @@ formAdicionarIngrediente.addEventListener('submit', async (event) => {
         const papeis = [];
         if (document.getElementById('contato-e-cliente').checked) papeis.push('Cliente');
         if (document.getElementById('contato-e-fornecedor').checked) papeis.push('Fornecedor');
-
         const contato = {
             tipo_pessoa: document.querySelector('input[name="tipo_pessoa"]:checked').value,
             nome_razao_social: document.getElementById('contato-nome').value,
@@ -754,7 +684,7 @@ formAdicionarIngrediente.addEventListener('submit', async (event) => {
             papeis: papeis
         };
         const { error } = await supabaseClient.from('contatos').insert([contato]);
-        if (error) { showNotification('Erro ao salvar contato.', 'error'); console.error(error); } 
+        if (error) { showNotification('Erro ao salvar contato.', 'error'); console.error(error); }
         else { showNotification('Contato salvo com sucesso!'); formContatos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
@@ -764,7 +694,6 @@ formAdicionarIngrediente.addEventListener('submit', async (event) => {
         const papeis = [];
         if (document.getElementById('edit-contato-e-cliente').checked) papeis.push('Cliente');
         if (document.getElementById('edit-contato-e-fornecedor').checked) papeis.push('Fornecedor');
-
         const contato = {
             tipo_pessoa: document.querySelector('input[name="edit_tipo_pessoa"]:checked').value,
             nome_razao_social: document.getElementById('edit-contato-nome').value,
@@ -775,7 +704,7 @@ formAdicionarIngrediente.addEventListener('submit', async (event) => {
             papeis: papeis
         };
         const { error } = await supabaseClient.from('contatos').update(contato).match({ id });
-        if (error) { showNotification('Erro ao atualizar contato.', 'error'); } 
+        if (error) { showNotification('Erro ao atualizar contato.', 'error'); }
         else { showNotification('Contato atualizado com sucesso!'); document.getElementById('modal-editar-contato').style.display = 'none'; document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
@@ -800,11 +729,11 @@ formAdicionarIngrediente.addEventListener('submit', async (event) => {
         document.getElementById('nf-valor-total').textContent = `R$ ${total.toFixed(2)}`;
     }
 
-    window.removerItemNf = function(index) {
+    window.removerItemNf = function (index) {
         nfItens.splice(index, 1);
         renderizarItensNf();
     }
-    
+
     function resetarFormularioNf() {
         nfItens = [];
         renderizarItensNf();
@@ -816,10 +745,8 @@ formAdicionarIngrediente.addEventListener('submit', async (event) => {
         event.preventDefault();
         const produtoId = document.getElementById('nf-produto').value;
         if (!produtoId) return showNotification('Selecione um produto.', 'error');
-
         const produtoSelecionado = produtosData.find(p => p.id == produtoId);
         if (!produtoSelecionado.preco_venda) return showNotification('Este produto não foi precificado.', 'error');
-        
         nfItens.push({
             produto_id: parseInt(produtoId, 10),
             nome: produtoSelecionado.nome,
@@ -835,30 +762,24 @@ formAdicionarIngrediente.addEventListener('submit', async (event) => {
         if (nfItens.length === 0) return showNotification('Adicione pelo menos um produto à nota.', 'error');
         const clienteId = document.getElementById('nf-cliente').value;
         if (!clienteId) return showNotification('Selecione um cliente.', 'error');
-
         const valorTotal = nfItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
-        
         const { data: notaFiscal, error } = await supabaseClient.from('notas_fiscais').insert([{
             cliente_id: parseInt(clienteId, 10),
             valor_total: valorTotal,
             status_pagamento: document.getElementById('nf-status-pagamento').value,
             metodo_pagamento: document.getElementById('nf-metodo-pagamento').value
         }]).select().single();
-
         if (error) {
             console.error('Erro ao salvar nota fiscal:', error);
             return showNotification('Erro ao salvar a nota fiscal.', 'error');
         }
-
         const itensParaSalvar = nfItens.map(item => ({
             nota_fiscal_id: notaFiscal.id,
             produto_id: item.produto_id,
             quantidade: item.quantidade,
             preco_unitario_momento: item.preco_unitario_momento
         }));
-
         const { error: errorItens } = await supabaseClient.from('nota_fiscal_itens').insert(itensParaSalvar);
-
         if (errorItens) {
             console.error('Erro ao salvar itens da nota:', errorItens);
             showNotification('Erro ao salvar os itens da nota. A nota principal foi criada mas está vazia.', 'error');
@@ -891,11 +812,11 @@ formAdicionarIngrediente.addEventListener('submit', async (event) => {
         document.getElementById('ne-valor-total').textContent = `R$ ${total.toFixed(2)}`;
     }
 
-    window.removerItemNe = function(index) {
+    window.removerItemNe = function (index) {
         neItens.splice(index, 1);
         renderizarItensNe();
     }
-    
+
     function resetarFormularioNe() {
         neItens = [];
         renderizarItensNe();
@@ -904,71 +825,54 @@ formAdicionarIngrediente.addEventListener('submit', async (event) => {
         document.getElementById('ne-data').valueAsDate = new Date();
     }
 
-// Em script.js, substitua o event listener do formAddNeItem
-formAddNeItem.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const insumoId = document.getElementById('ne-insumo').value;
-    const insumoSelecionado = insumosData.find(i => i.id == insumoId);
-
-    if (!insumoId || !insumoSelecionado) {
-        return showNotification('Selecione um insumo válido.', 'error');
-    }
-
-    const quantidadeEmbalagens = parseFloat(document.getElementById('ne-quantidade').value);
-    const precoPorEmbalagem = parseFloat(document.getElementById('ne-preco-pacote').value);
-    const quantidadePorEmbalagem = parseFloat(document.getElementById('ne-quantidade-pacote').value);
-
-    if (!quantidadeEmbalagens || !precoPorEmbalagem || !quantidadePorEmbalagem) {
-        return showNotification('Preencha todos os campos da compra.', 'error');
-    }
-
-    // A quantidade a ser adicionada no estoque (na unidade base)
-    const quantidadeTotalEmEstoque = quantidadeEmbalagens * quantidadePorEmbalagem;
-    
-    // O preço unitário do momento desta compra
-    const precoUnitarioMomento = precoPorEmbalagem / quantidadePorEmbalagem;
-
-    neItens.push({
-        insumo_id: parseInt(insumoId, 10),
-        nome: `${insumoSelecionado.nome} (${quantidadeEmbalagens}x ${quantidadePorEmbalagem}${insumoSelecionado.unidade_medida})`,
-        // A 'quantidade' salva na nota de entrada agora é a quantidade na unidade base (g, ml, etc)
-        quantidade: quantidadeTotalEmEstoque,
-        preco_unitario_momento: precoUnitarioMomento
+    formAddNeItem.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const insumoId = document.getElementById('ne-insumo').value;
+        const insumoSelecionado = insumosData.find(i => i.id == insumoId);
+        if (!insumoId || !insumoSelecionado) {
+            return showNotification('Selecione um insumo válido.', 'error');
+        }
+        const quantidadeEmbalagens = parseFloat(document.getElementById('ne-quantidade').value);
+        const precoPorEmbalagem = parseFloat(document.getElementById('ne-preco-pacote').value);
+        const quantidadePorEmbalagem = parseFloat(document.getElementById('ne-quantidade-pacote').value);
+        if (!quantidadeEmbalagens || !precoPorEmbalagem || !quantidadePorEmbalagem) {
+            return showNotification('Preencha todos os campos da compra.', 'error');
+        }
+        const quantidadeTotalEmEstoque = quantidadeEmbalagens * quantidadePorEmbalagem;
+        const precoUnitarioMomento = precoPorEmbalagem / quantidadePorEmbalagem;
+        neItens.push({
+            insumo_id: parseInt(insumoId, 10),
+            nome: `${insumoSelecionado.nome} (${quantidadeEmbalagens}x ${quantidadePorEmbalagem}${insumoSelecionado.unidade_medida})`,
+            quantidade: quantidadeTotalEmEstoque,
+            preco_unitario_momento: precoUnitarioMomento
+        });
+        renderizarItensNe();
+        formAddNeItem.reset();
+        document.getElementById('ne-insumo').focus();
     });
-
-    renderizarItensNe();
-    formAddNeItem.reset();
-    document.getElementById('ne-insumo').focus();
-});
 
     btnSalvarNe.addEventListener('click', async () => {
         if (neItens.length === 0) return showNotification('Adicione pelo menos um insumo à nota.', 'error');
         const fornecedorId = document.getElementById('ne-fornecedor').value;
         const dataCompra = document.getElementById('ne-data').value;
         if (!fornecedorId || !dataCompra) return showNotification('Selecione um fornecedor e uma data.', 'error');
-
         const valorTotal = neItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
-
         const { data: notaEntrada, error } = await supabaseClient.from('notas_entrada').insert([{
             fornecedor_id: parseInt(fornecedorId, 10),
             data_compra: dataCompra,
             valor_total: valorTotal
         }]).select().single();
-
         if (error) {
             console.error('Erro ao salvar nota de entrada:', error);
             return showNotification('Erro ao salvar a nota de compra.', 'error');
         }
-
         const itensParaSalvar = neItens.map(item => ({
             nota_entrada_id: notaEntrada.id,
             insumo_id: item.insumo_id,
             quantidade: item.quantidade,
             preco_unitario_momento: item.preco_unitario_momento
         }));
-
         const { error: errorItens } = await supabaseClient.from('nota_entrada_itens').insert(itensParaSalvar);
-
         if (errorItens) {
             console.error('Erro ao salvar itens da nota de entrada:', errorItens);
             showNotification('Erro ao salvar os insumos da nota. A nota principal foi criada mas está vazia.', 'error');
@@ -979,32 +883,26 @@ formAddNeItem.addEventListener('submit', (event) => {
             document.querySelector('#tela-notas-entrada .sub-nav-link[data-target="subtela-historico-entrada"]').click();
         }
     });
-    
+
     function displayNotasFiscais() {
         const corpoTabela = document.getElementById('corpo-tabela-notas-saida');
         if (!corpoTabela) return;
         corpoTabela.innerHTML = '';
-
         const filtroBusca = document.getElementById('filtro-busca').value.toLowerCase();
         const filtroDataInicio = document.getElementById('filtro-data-inicio').value;
         const filtroDataFim = document.getElementById('filtro-data-fim').value;
-
         const filteredData = notasFiscaisData.filter(nf => {
             const buscaCliente = nf.contatos?.nome_razao_social.toLowerCase().includes(filtroBusca);
             const buscaId = nf.id.toString().includes(filtroBusca);
-            
             const dataNota = new Date(nf.created_at);
-            dataNota.setHours(0,0,0,0);
+            dataNota.setHours(0, 0, 0, 0);
             const dataInicio = filtroDataInicio ? new Date(filtroDataInicio + 'T00:00:00Z') : null;
             const dataFim = filtroDataFim ? new Date(filtroDataFim + 'T23:59:59Z') : null;
-
             const atendeBusca = filtroBusca ? (buscaCliente || buscaId) : true;
             const atendeDataInicio = dataInicio ? dataNota >= dataInicio : true;
             const atendeDataFim = dataFim ? dataNota <= dataFim : true;
-
             return atendeBusca && atendeDataInicio && atendeDataFim;
         });
-
         filteredData.sort((a, b) => {
             let valA, valB;
             if (sortColumn === 'cliente') {
@@ -1014,29 +912,25 @@ formAddNeItem.addEventListener('submit', (event) => {
                 valA = a[sortColumn];
                 valB = b[sortColumn];
             }
-            
             if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
             if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
             return 0;
         });
-
         const startIndex = (currentPage - 1) * rowsPerPage;
         const endIndex = startIndex + rowsPerPage;
         const paginatedData = filteredData.slice(startIndex, endIndex);
-
         if (paginatedData.length === 0) {
             corpoTabela.innerHTML = '<tr><td colspan="5">Nenhuma nota fiscal encontrada com os filtros atuais.</td></tr>';
         } else {
             renderizarTabelaNotasFiscais(paginatedData);
         }
-
         renderizarPaginacao(filteredData.length);
         atualizarCabecalhoOrdenacao();
     }
 
     function renderizarTabelaNotasFiscais(notas) {
         const corpoTabela = document.getElementById('corpo-tabela-notas-saida');
-        corpoTabela.innerHTML = ''; 
+        corpoTabela.innerHTML = '';
         notas.forEach(nf => {
             const tr = document.createElement('tr');
             const statusClass = nf.status_pagamento === 'Pago' ? 'status-pago' : 'status-pendente';
@@ -1062,10 +956,8 @@ formAddNeItem.addEventListener('submit', (event) => {
         if (!container || !infoContainer) return;
         container.innerHTML = '';
         infoContainer.textContent = `(Total: ${totalItens})`;
-
         const totalPages = Math.ceil(totalItens / rowsPerPage);
         if (totalPages <= 1) return;
-
         for (let i = 1; i <= totalPages; i++) {
             const button = document.createElement('button');
             button.textContent = i;
@@ -1077,11 +969,11 @@ formAddNeItem.addEventListener('submit', (event) => {
             container.appendChild(button);
         }
     }
-    
+
     function atualizarCabecalhoOrdenacao() {
         document.querySelectorAll('#tela-notas-saida th.sortable').forEach(th => {
             const span = th.querySelector('span');
-            if(!span) return;
+            if (!span) return;
             span.textContent = '';
             if (th.dataset.sort === sortColumn) {
                 span.textContent = sortDirection === 'asc' ? '▲' : '▼';
@@ -1124,10 +1016,8 @@ formAddNeItem.addEventListener('submit', (event) => {
         event.preventDefault();
         const produtoId = document.getElementById('edit-ns-produto').value;
         if (!produtoId) return showNotification('Selecione um produto.', 'error');
-
         const produtoSelecionado = produtosData.find(p => p.id == produtoId);
         if (!produtoSelecionado.preco_venda) return showNotification('Este produto não foi precificado.', 'error');
-        
         editNsItens.push({
             produto_id: parseInt(produtoId, 10),
             nome: produtoSelecionado.nome,
@@ -1141,43 +1031,34 @@ formAddNeItem.addEventListener('submit', (event) => {
     btnAtualizarNs.addEventListener('click', async () => {
         const notaId = document.getElementById('edit-ns-hidden-id').value;
         if (!notaId) return;
-
         if (editNsItens.length === 0) return showNotification('A nota não pode ficar sem itens.', 'error');
-
         const valorTotal = editNsItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
-        
         const { error: updateError } = await supabaseClient.from('notas_fiscais').update({
             cliente_id: document.getElementById('edit-ns-cliente').value,
             metodo_pagamento: document.getElementById('edit-ns-metodo-pagamento').value,
             status_pagamento: document.getElementById('edit-ns-status-pagamento').value,
             valor_total: valorTotal
         }).match({ id: notaId });
-
         if (updateError) {
             console.error("Erro ao atualizar a nota:", updateError);
             return showNotification('Falha ao atualizar a nota.', 'error');
         }
-
         const { error: deleteError } = await supabaseClient.from('nota_fiscal_itens').delete().match({ nota_fiscal_id: notaId });
         if (deleteError) {
             console.error("Erro ao deletar itens antigos:", deleteError);
             return showNotification('Falha ao limpar itens antigos.', 'error');
         }
-
         const novosItensParaSalvar = editNsItens.map(item => ({
             nota_fiscal_id: notaId,
             produto_id: item.produto_id,
             quantidade: item.quantidade,
             preco_unitario_momento: item.preco_unitario_momento
         }));
-
         const { error: insertError } = await supabaseClient.from('nota_fiscal_itens').insert(novosItensParaSalvar);
-        
         if (insertError) {
             console.error("Erro ao inserir novos itens:", insertError);
             return showNotification('Falha ao salvar os novos itens.', 'error');
         }
-
         showNotification('Nota de Venda atualizada com sucesso!');
         document.getElementById('modal-editar-nota-saida').style.display = 'none';
         document.dispatchEvent(new CustomEvent('dadosAtualizados'));
@@ -1187,13 +1068,10 @@ formAddNeItem.addEventListener('submit', (event) => {
         event.preventDefault();
         const insumoId = document.getElementById('edit-ne-insumo').value;
         const preco = parseFloat(document.getElementById('edit-ne-preco').value);
-
         if (!insumoId || !preco || preco <= 0) {
             return showNotification('Selecione um insumo e preencha um preço válido.', 'error');
         }
-        
         const insumoSelecionado = insumosData.find(i => i.id == insumoId);
-        
         editNeItens.push({
             insumo_id: parseInt(insumoId, 10),
             nome: insumoSelecionado.nome,
@@ -1207,48 +1085,38 @@ formAddNeItem.addEventListener('submit', (event) => {
     btnAtualizarNe.addEventListener('click', async () => {
         const notaId = document.getElementById('edit-ne-hidden-id').value;
         if (!notaId) return;
-
         if (editNeItens.length === 0) return showNotification('A nota de compra não pode ficar sem insumos.', 'error');
-
         const valorTotal = editNeItens.reduce((acc, item) => acc + (item.quantidade * item.preco_unitario_momento), 0);
-        
         const { error: updateError } = await supabaseClient.from('notas_entrada').update({
             fornecedor_id: document.getElementById('edit-ne-fornecedor').value,
             data_compra: document.getElementById('edit-ne-data').value,
             valor_total: valorTotal
         }).match({ id: notaId });
-
         if (updateError) {
             console.error("Erro ao atualizar a nota de compra:", updateError);
             return showNotification('Falha ao atualizar a nota de compra.', 'error');
         }
-
         const { error: deleteError } = await supabaseClient.from('nota_entrada_itens').delete().match({ nota_entrada_id: notaId });
         if (deleteError) {
             console.error("Erro ao deletar insumos antigos:", deleteError);
             return showNotification('Falha ao limpar insumos antigos.', 'error');
         }
-
         const novosItensParaSalvar = editNeItens.map(item => ({
             nota_entrada_id: notaId,
             insumo_id: item.insumo_id,
             quantidade: item.quantidade,
             preco_unitario_momento: item.preco_unitario_momento
         }));
-
         const { error: insertError } = await supabaseClient.from('nota_entrada_itens').insert(novosItensParaSalvar);
-        
         if (insertError) {
             console.error("Erro ao inserir novos insumos:", insertError);
             return showNotification('Falha ao salvar os novos insumos.', 'error');
         }
-
         showNotification('Nota de Compra atualizada com sucesso!');
         document.getElementById('modal-editar-nota-entrada').style.display = 'none';
         document.dispatchEvent(new CustomEvent('dadosAtualizados'));
     });
 
-    
     async function atualizarTodosOsDados() {
         try {
             const [insumosResult, produtosResult, contatosResult, notasSaidaResult, notasEntradaResult] = await Promise.all([
@@ -1258,17 +1126,14 @@ formAddNeItem.addEventListener('submit', (event) => {
                 supabaseClient.from('notas_fiscais').select(`*, contatos(nome_razao_social)`),
                 supabaseClient.from('notas_entrada').select(`*, contatos(nome_razao_social)`)
             ]);
-            
             insumosData = insumosResult.data || [];
             produtosData = produtosResult.data || [];
             contatosData = contatosResult.data || [];
             notasFiscaisData = notasSaidaResult.data || [];
             notasEntradaData = notasEntradaResult.data || [];
-            
             renderizarTabelaInsumos();
             renderizarTabelaProdutos();
             renderizarTabelaContatos();
-            
             const selectors = {
                 selectInsumo: document.getElementById('select-insumo-receita'),
                 selectProdutoNf: document.getElementById('nf-produto'),
@@ -1280,16 +1145,13 @@ formAddNeItem.addEventListener('submit', (event) => {
                 editNeFornecedor: document.getElementById('edit-ne-fornecedor'),
                 editNeInsumo: document.getElementById('edit-ne-insumo')
             };
-            
-            Object.values(selectors).forEach(sel => { if(sel) sel.innerHTML = ''; });
-            
+            Object.values(selectors).forEach(sel => { if (sel) sel.innerHTML = ''; });
             const optionTemplates = {
                 insumo: '<option value="">Selecione...</option>',
                 produto: '<option value="">Selecione um produto...</option>',
                 cliente: '<option value="">Selecione um cliente...</option>',
                 fornecedor: '<option value="">Selecione um fornecedor...</option>'
             };
-
             Object.assign(selectors.selectInsumo, { innerHTML: optionTemplates.insumo });
             Object.assign(selectors.selectProdutoNf, { innerHTML: optionTemplates.produto });
             Object.assign(selectors.selectClienteNf, { innerHTML: optionTemplates.cliente });
@@ -1299,36 +1161,30 @@ formAddNeItem.addEventListener('submit', (event) => {
             Object.assign(selectors.editNsProduto, { innerHTML: optionTemplates.produto });
             Object.assign(selectors.editNeFornecedor, { innerHTML: optionTemplates.fornecedor });
             Object.assign(selectors.editNeInsumo, { innerHTML: optionTemplates.insumo });
-            
             insumosData.forEach(i => {
                 const option = `<option value="${i.id}">${i.nome}</option>`;
                 selectors.selectInsumo.innerHTML += option;
                 selectors.selectNeInsumo.innerHTML += option;
                 selectors.editNeInsumo.innerHTML += option;
             });
-
             produtosData.filter(p => p.preco_venda > 0).forEach(p => {
                 const option = `<option value="${p.id}">${p.nome} - R$ ${Number(p.preco_venda).toFixed(2)}</option>`;
                 selectors.selectProdutoNf.innerHTML += option;
                 selectors.editNsProduto.innerHTML += option;
             });
-            
             const clientes = contatosData.filter(c => parsePapeis(c.papeis).includes('Cliente'));
             clientes.forEach(c => {
                 const option = `<option value="${c.id}">${c.nome_razao_social}</option>`;
                 selectors.selectClienteNf.innerHTML += option;
                 selectors.editNsCliente.innerHTML += option;
             });
-
             const fornecedores = contatosData.filter(c => parsePapeis(c.papeis).includes('Fornecedor'));
             fornecedores.forEach(f => {
                 const option = `<option value="${f.id}">${f.nome_razao_social}</option>`;
                 selectors.selectNeFornecedor.innerHTML += option;
                 selectors.editNeFornecedor.innerHTML += option;
             });
-            
             document.getElementById('ne-data').valueAsDate = new Date();
-            
             displayNotasFiscais();
             displayNotasEntrada();
         } catch (error) {
@@ -1336,37 +1192,32 @@ formAddNeItem.addEventListener('submit', (event) => {
             showNotification("ERRO CRÍTICO: Não foi possível carregar os dados. Verifique a conexão e a chave do Supabase.", "error");
         }
     }
-    
+
     document.addEventListener('dadosAtualizados', atualizarTodosOsDados);
-    
+
+    // DEIXE ESTAS LINHAS AQUI, mas o login vai controlar quando elas são chamadas.
     mostrarTela('tela-dashboard');
-    atualizarTodosOsDados();
+    // atualizarTodosOsDados(); // O login vai chamar isso agora
     atualizarLabelsFormularioContato();
 
     function displayNotasEntrada() {
         const corpoTabela = document.getElementById('corpo-tabela-notas-entrada');
         if (!corpoTabela) return;
         corpoTabela.innerHTML = '';
-
         const filtroBusca = document.getElementById('filtro-busca-entrada').value.toLowerCase();
         const filtroDataInicio = document.getElementById('filtro-data-inicio-entrada').value;
         const filtroDataFim = document.getElementById('filtro-data-fim-entrada').value;
-
         const filteredData = notasEntradaData.filter(ne => {
             const buscaFornecedor = ne.contatos?.nome_razao_social.toLowerCase().includes(filtroBusca);
             const buscaId = ne.id.toString().includes(filtroBusca);
-            
             const dataNota = new Date(ne.data_compra);
             const dataInicio = filtroDataInicio ? new Date(filtroDataInicio) : null;
             const dataFim = filtroDataFim ? new Date(filtroDataFim) : null;
-
             const atendeBusca = filtroBusca ? (buscaFornecedor || buscaId) : true;
             const atendeDataInicio = dataInicio ? dataNota >= dataInicio : true;
             const atendeDataFim = dataFim ? dataNota <= dataFim : true;
-
             return atendeBusca && atendeDataInicio && atendeDataFim;
         });
-
         filteredData.sort((a, b) => {
             let valA, valB;
             if (sortColumnEntrada === 'fornecedor') {
@@ -1376,29 +1227,25 @@ formAddNeItem.addEventListener('submit', (event) => {
                 valA = a[sortColumnEntrada];
                 valB = b[sortColumnEntrada];
             }
-            
             if (valA < valB) return sortDirectionEntrada === 'asc' ? -1 : 1;
             if (valA > valB) return sortDirectionEntrada === 'asc' ? 1 : -1;
             return 0;
         });
-
         const startIndex = (currentPageEntrada - 1) * rowsPerPageEntrada;
         const endIndex = startIndex + rowsPerPageEntrada;
         const paginatedData = filteredData.slice(startIndex, endIndex);
-
         if (paginatedData.length === 0) {
             corpoTabela.innerHTML = '<tr><td colspan="4">Nenhuma nota de compra encontrada.</td></tr>';
         } else {
             renderizarTabelaNotasEntrada(paginatedData);
         }
-
         renderizarPaginacaoEntrada(filteredData.length);
         atualizarCabecalhoOrdenacaoEntrada();
     }
 
     function renderizarTabelaNotasEntrada(notas) {
         const corpoTabela = document.getElementById('corpo-tabela-notas-entrada');
-        corpoTabela.innerHTML = ''; 
+        corpoTabela.innerHTML = '';
         notas.forEach(ne => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -1421,10 +1268,8 @@ formAddNeItem.addEventListener('submit', (event) => {
         if (!container || !infoContainer) return;
         container.innerHTML = '';
         infoContainer.textContent = `(Total: ${totalItens})`;
-
         const totalPages = Math.ceil(totalItens / rowsPerPageEntrada);
         if (totalPages <= 1) return;
-
         for (let i = 1; i <= totalPages; i++) {
             const button = document.createElement('button');
             button.textContent = i;
@@ -1436,18 +1281,18 @@ formAddNeItem.addEventListener('submit', (event) => {
             container.appendChild(button);
         }
     }
-    
+
     function atualizarCabecalhoOrdenacaoEntrada() {
         document.querySelectorAll('#subtela-historico-entrada th.sortable').forEach(th => {
             const span = th.querySelector('span');
-            if(!span) return;
+            if (!span) return;
             span.textContent = '';
             if (th.dataset.sortEntrada === sortColumnEntrada) {
                 span.textContent = sortDirectionEntrada === 'asc' ? '▲' : '▼';
             }
         });
     }
-    
+
     document.getElementById('filtro-busca-entrada').addEventListener('input', () => { currentPageEntrada = 1; displayNotasEntrada(); });
     document.getElementById('filtro-data-inicio-entrada').addEventListener('change', () => { currentPageEntrada = 1; displayNotasEntrada(); });
     document.getElementById('filtro-data-fim-entrada').addEventListener('change', () => { currentPageEntrada = 1; displayNotasEntrada(); });
@@ -1478,5 +1323,34 @@ formAddNeItem.addEventListener('submit', (event) => {
             displayNotasEntrada();
         });
     });
-});
 
+    // --- LÓGICA DE LOGIN ---
+    const loginScreen = document.getElementById('login-screen');
+    const appContainer = document.querySelector('.app-container');
+    const formLogin = document.getElementById('form-login');
+    const senhaInput = document.getElementById('senha-login');
+    const errorMessage = document.getElementById('login-error-message');
+
+    formLogin.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorMessage.textContent = 'Verificando...';
+        try {
+            const { data, error } = await supabaseClient.functions.invoke('validar-senha', {
+                body: JSON.stringify({ senha_tentativa: senhaInput.value }),
+            });
+            if (error) throw error;
+            if (data.success) {
+                loginScreen.style.display = 'none';
+                appContainer.style.display = 'grid';
+                // AGORA CHAMAMOS A FUNÇÃO PARA CARREGAR OS DADOS APÓS O LOGIN
+                atualizarTodosOsDados(); 
+            } else {
+                errorMessage.textContent = 'Senha incorreta.';
+                senhaInput.value = '';
+            }
+        } catch (error) {
+            errorMessage.textContent = 'Erro de comunicação. Tente novamente.';
+            console.error('Erro ao validar senha:', error);
+        }
+    });
+});

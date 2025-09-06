@@ -9,6 +9,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+    <div id="login-screen">
+        <div class="login-box">
+            <img src="domma.png" alt="Logo Domma Doceria" class="login-logo">
+            <h2>Acesso Restrito</h2>
+            <form id="form-login">
+                <label for="senha-login">Senha</label>
+                <input type="password" id="senha-login" required>
+                <button type="submit">Entrar</button>
+                <p id="login-error-message" class="error-message"></p>
+            </form>
+        </div>
+    </div>
+
     <div class="app-container">
         <aside class="sidebar-menu">
             <div class="sidebar-header">
@@ -667,8 +681,9 @@
         </div>
     </div>
 
-    <div id="notification-container" class="notification-container"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div id="notification-container" class="notification-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>    
+    <script src="config.js"></script> 
     <script src="script.js" defer></script>
     <script src="estoque.js" defer></script>
     <script src="dashboard.js" defer></script>

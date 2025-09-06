@@ -1,0 +1,4 @@
+# .gitignore
+
+# Ignorar o arquivo de configuração com as chaves secretas
+config.js
