@@ -501,23 +501,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-// Em script.js
 function renderizarTabelaInsumos() {
     const corpoTabela = document.getElementById('corpo-tabela-insumos');
     corpoTabela.innerHTML = '';
     if (!insumosData || insumosData.length === 0) {
-        corpoTabela.innerHTML = '<tr><td colspan="4">Nenhum insumo cadastrado.</td></tr>';
+        // Aumentamos o colspan para 5, pois agora temos 5 colunas
+        corpoTabela.innerHTML = '<tr><td colspan="5">Nenhum insumo cadastrado.</td></tr>';
         return;
     }
     insumosData.forEach(insumo => {
         const tr = document.createElement('tr');
+        
+        const precoUnitario = insumo.preco_unitario ? Number(insumo.preco_unitario).toFixed(4) : '0.0000';
+        const estoqueMinimo = insumo.nivel_minimo_estoque ? Number(insumo.nivel_minimo_estoque) : 0;
+        const unidade = insumo.unidade_medida || 'N/D';
 
-        const preco = insumo.preco_unitario ? Number(insumo.preco_unitario).toFixed(4) : '0.0000';
-
+        // Agora o innerHTML preenche todas as novas colunas
         tr.innerHTML = `
             <td>${insumo.nome}</td>
-            <td>${insumo.unidade_medida}</td>
-            <td>R$ ${preco}</td> 
+            <td>R$ ${precoUnitario}</td>
+            <td>${unidade}</td>
+            <td>${estoqueMinimo} ${unidade}</td> 
             <td class="actions-container">
                 <button class="btn-acao btn-warning" onclick="editarInsumo(${insumo.id})">✏️</button>
                 <button class="btn-acao btn-danger" onclick="deletarInsumo(${insumo.id}, '${insumo.nome}')">🗑️</button>
