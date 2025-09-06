@@ -113,10 +113,17 @@
                         <label for="nome-insumo">Nome do Insumo</label>
                         <input type="text" id="nome-insumo" placeholder="Ex: Farinha de Trigo" required>
                     </div>
-                    <div class="form-group">
-                        <label for="unidade-medida">Unidade de Medida</label>
-                        <input type="text" id="unidade-medida" placeholder="kg, g, un" required>
-                    </div>
+<div class="form-group">
+    <label for="unidade-medida">Unidade de Medida</label>
+    <select id="unidade-medida" required>
+        <option value="">Selecione...</option>
+        <option value="kg">Quilograma (kg)</option>
+        <option value="g">Grama (g)</option>
+        <option value="l">Litro (l)</option>
+        <option value="ml">Mililitro (ml)</option>
+        <option value="un">Unidade (un)</option>
+    </select>
+</div>
                     <div class="form-group">
                         <label for="preco-unitario">Preço de Compra (R$)</label>
                         <input type="number" id="preco-unitario" placeholder="2.50" step="0.01" required>
@@ -426,10 +433,16 @@
                     <label for="edit-nome-insumo">Nome do Insumo:</label>
                     <input type="text" id="edit-nome-insumo">
                 </div>
-                <div class="form-group">
-                    <label for="edit-unidade-medida">Unidade de Medida:</label>
-                    <input type="text" id="edit-unidade-medida">
-                </div>
+<div class="form-group">
+    <label for="edit-unidade-medida">Unidade de Medida:</label>
+    <select id="edit-unidade-medida">
+        <option value="kg">Quilograma (kg)</option>
+        <option value="g">Grama (g)</option>
+        <option value="l">Litro (l)</option>
+        <option value="ml">Mililitro (ml)</option>
+        <option value="un">Unidade (un)</option>
+    </select>
+</div>
                 <div class="form-group">
                     <label for="edit-preco-unitario">Preço Unitário (R$):</label>
                     <input type="number" id="edit-preco-unitario" step="0.01">

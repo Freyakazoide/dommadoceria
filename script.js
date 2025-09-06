@@ -24,13 +24,30 @@ function parsePapeis(papeis) {
     return Array.isArray(papeis) ? papeis : [];
 }
 
-function editarInsumo(id, nome, unidade, preco) {
+// script.js
+async function editarInsumo(id) {
     const modal = document.getElementById('modal-editar-insumo');
-    document.getElementById('edit-insumo-id').value = id;
-    document.getElementById('edit-nome-insumo').value = nome;
-    document.getElementById('edit-unidade-medida').value = unidade;
-    document.getElementById('edit-preco-unitario').value = preco;
-    document.getElementById('edit-nivel_minimo_estoque').value = insumo ? insumo.nivel_minimo_estoque : 0;
+
+    // 1. Busca os dados mais recentes do insumo no Supabase
+    const { data: insumo, error } = await supabaseClient
+        .from('insumos')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error || !insumo) {
+        showNotification('Erro ao carregar dados do insumo para edição.', 'error');
+        console.error('Erro ao buscar insumo:', error);
+        return;
+    }
+
+    // 2. Preenche o formulário com os dados retornados
+    document.getElementById('edit-insumo-id').value = insumo.id;
+    document.getElementById('edit-nome-insumo').value = insumo.nome;
+    document.getElementById('edit-unidade-medida').value = insumo.unidade_medida;
+    document.getElementById('edit-preco-unitario').value = insumo.preco_unitario;
+    document.getElementById('edit-nivel_minimo_estoque').value = insumo.nivel_minimo_estoque || 0;
+    
     modal.style.display = 'block';
 }
 
@@ -482,28 +499,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    function renderizarTabelaInsumos() {
-        const corpoTabela = document.getElementById('corpo-tabela-insumos');
-        corpoTabela.innerHTML = '';
-        if (!insumosData || insumosData.length === 0) {
-            corpoTabela.innerHTML = '<tr><td colspan="4">Nenhum insumo cadastrado.</td></tr>';
-            return;
-        }
-        insumosData.forEach(insumo => {
-            const tr = document.createElement('tr');
-            const preco = insumo.preco_unitario ? Number(insumo.preco_unitario).toFixed(2) : '0.00';
-            tr.innerHTML = `
-                <td>${insumo.nome}</td>
-                <td>${insumo.unidade_medida}</td>
-                <td>R$ ${preco}</td>
-                <td class="actions-container">
-                    <button class="btn-acao btn-warning" onclick="editarInsumo(${insumo.id}, '${insumo.nome}', '${insumo.unidade_medida}', ${insumo.preco_unitario || 0})">✏️</button>
-                    <button class="btn-acao btn-danger" onclick="deletarInsumo(${insumo.id}, '${insumo.nome}')">🗑️</button>
-                </td>
-            `;
-            corpoTabela.appendChild(tr);
-        });
+function renderizarTabelaInsumos() {
+    const corpoTabela = document.getElementById('corpo-tabela-insumos');
+    corpoTabela.innerHTML = '';
+    if (!insumosData || insumosData.length === 0) {
+        corpoTabela.innerHTML = '<tr><td colspan="4">Nenhum insumo cadastrado.</td></tr>';
+        return;
     }
+    insumosData.forEach(insumo => {
+        const tr = document.createElement('tr');
+        const preco = insumo.preco_unitario ? Number(insumo.preco_unitario).toFixed(2) : '0.00';
+        // Ajuste aqui para passar apenas o ID
+        tr.innerHTML = `
+            <td>${insumo.nome}</td>
+            <td>${insumo.unidade_medida}</td>
+            <td>R$ ${preco}</td>
+            <td class="actions-container">
+                <button class="btn-acao btn-warning" onclick="editarInsumo(${insumo.id})">✏️</button>
+                <button class="btn-acao btn-danger" onclick="deletarInsumo(${insumo.id}, '${insumo.nome}')">🗑️</button>
+            </td>
+        `;
+        corpoTabela.appendChild(tr);
+    });
+}
 
     formInsumos.addEventListener('submit', async (event) => {
         event.preventDefault();
