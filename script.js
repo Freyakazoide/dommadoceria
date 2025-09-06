@@ -525,6 +525,30 @@ function renderizarTabelaInsumos() {
     });
 }
 
+// Cole esta função logo após o final da função renderizarTabelaInsumos
+function renderizarTabelaProdutos() {
+    const corpoTabela = document.getElementById('corpo-tabela-produtos');
+    corpoTabela.innerHTML = '';
+    if (!produtosData || produtosData.length === 0) {
+        corpoTabela.innerHTML = '<tr><td colspan="3">Nenhum produto cadastrado.</td></tr>';
+        return;
+    }
+    produtosData.forEach(produto => {
+        const tr = document.createElement('tr');
+        // O 'preco_venda' pode ser nulo, então tratamos isso para exibição
+        const precoVenda = produto.preco_venda ? `R$ ${Number(produto.preco_venda).toFixed(2)}` : '<span style="color: #aaa;">Não precificado</span>';
+        tr.innerHTML = `
+            <td>${produto.nome}</td>
+            <td><strong>${precoVenda}</strong></td>
+            <td class="actions-container">
+                <button class="btn-acao btn-info" onclick="gerenciarProduto(${produto.id})">⚙️ Gerenciar</button>
+                <button class="btn-acao btn-danger" onclick="deletarProduto(${produto.id}, '${produto.nome}')">🗑️</button>
+            </td>
+        `;
+        corpoTabela.appendChild(tr);
+    });
+}
+
 formInsumos.addEventListener('submit', async (event) => {
     event.preventDefault();
 
