@@ -523,17 +523,37 @@ function renderizarTabelaInsumos() {
     });
 }
 
-    formInsumos.addEventListener('submit', async (event) => {
-        event.preventDefault();
-const { error } = await supabaseClient.from('insumos').insert([{ 
-    nome: document.getElementById('nome-insumo').value, 
-    unidade_medida: document.getElementById('unidade-medida').value, 
-    preco_unitario: document.getElementById('preco-unitario').value,
-    nivel_minimo_estoque: document.getElementById('nivel_minimo_estoque').value
-}]);
-        if (error) { showNotification('Ocorreu um erro ao salvar.', 'error'); } 
-        else { showNotification('Insumo salvo!'); formInsumos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
-    });
+formInsumos.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const precoCompra = parseFloat(document.getElementById('preco-compra').value);
+    const quantidadeCompra = parseFloat(document.getElementById('quantidade-compra').value);
+    
+    if (quantidadeCompra <= 0) {
+        showNotification('A quantidade na embalagem deve ser maior que zero.', 'error');
+        return;
+    }
+
+    // Calcula o preço por unidade de medida base
+    const precoUnitarioCalculado = precoCompra / quantidadeCompra;
+
+    const { error } = await supabaseClient.from('insumos').insert([{ 
+        nome: document.getElementById('nome-insumo').value, 
+        unidade_medida: document.getElementById('unidade-medida').value, 
+        // Salva o preço calculado por unidade (g, ml, un)
+        preco_unitario: precoUnitarioCalculado,
+        nivel_minimo_estoque: document.getElementById('nivel_minimo_estoque').value
+    }]);
+
+    if (error) { 
+        showNotification('Ocorreu um erro ao salvar.', 'error'); 
+        console.error(error);
+    } else { 
+        showNotification('Insumo salvo com o preço unitário calculado!'); 
+        formInsumos.reset(); 
+        document.dispatchEvent(new CustomEvent('dadosAtualizados')); 
+    }
+});
     
     formEditarInsumo.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -801,27 +821,42 @@ const { error } = await supabaseClient.from('insumos').update({
         document.getElementById('ne-data').valueAsDate = new Date();
     }
 
-    formAddNeItem.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const insumoId = document.getElementById('ne-insumo').value;
-        const preco = parseFloat(document.getElementById('ne-preco').value);
+// Em script.js, substitua o event listener do formAddNeItem
+formAddNeItem.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const insumoId = document.getElementById('ne-insumo').value;
+    const insumoSelecionado = insumosData.find(i => i.id == insumoId);
 
-        if (!insumoId || !preco || preco <= 0) {
-            return showNotification('Selecione um insumo e preencha um preço válido.', 'error');
-        }
-        
-        const insumoSelecionado = insumosData.find(i => i.id == insumoId);
-        
-        neItens.push({
-            insumo_id: parseInt(insumoId, 10),
-            nome: insumoSelecionado.nome,
-            quantidade: parseFloat(document.getElementById('ne-quantidade').value),
-            preco_unitario_momento: preco
-        });
-        renderizarItensNe();
-        formAddNeItem.reset();
-        document.getElementById('ne-insumo').focus();
+    if (!insumoId || !insumoSelecionado) {
+        return showNotification('Selecione um insumo válido.', 'error');
+    }
+
+    const quantidadeEmbalagens = parseFloat(document.getElementById('ne-quantidade').value);
+    const precoPorEmbalagem = parseFloat(document.getElementById('ne-preco-pacote').value);
+    const quantidadePorEmbalagem = parseFloat(document.getElementById('ne-quantidade-pacote').value);
+
+    if (!quantidadeEmbalagens || !precoPorEmbalagem || !quantidadePorEmbalagem) {
+        return showNotification('Preencha todos os campos da compra.', 'error');
+    }
+
+    // A quantidade a ser adicionada no estoque (na unidade base)
+    const quantidadeTotalEmEstoque = quantidadeEmbalagens * quantidadePorEmbalagem;
+    
+    // O preço unitário do momento desta compra
+    const precoUnitarioMomento = precoPorEmbalagem / quantidadePorEmbalagem;
+
+    neItens.push({
+        insumo_id: parseInt(insumoId, 10),
+        nome: `${insumoSelecionado.nome} (${quantidadeEmbalagens}x ${quantidadePorEmbalagem}${insumoSelecionado.unidade_medida})`,
+        // A 'quantidade' salva na nota de entrada agora é a quantidade na unidade base (g, ml, etc)
+        quantidade: quantidadeTotalEmEstoque,
+        preco_unitario_momento: precoUnitarioMomento
     });
+
+    renderizarItensNe();
+    formAddNeItem.reset();
+    document.getElementById('ne-insumo').focus();
+});
 
     btnSalvarNe.addEventListener('click', async () => {
         if (neItens.length === 0) return showNotification('Adicione pelo menos um insumo à nota.', 'error');

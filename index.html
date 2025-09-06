@@ -108,34 +108,40 @@
 
             <section id="tela-insumos" class="tela hidden">
                 <h2>Estoque de Insumos</h2>
-                <form id="form-insumos" class="form-grid">
-                    <div class="form-group">
-                        <label for="nome-insumo">Nome do Insumo</label>
-                        <input type="text" id="nome-insumo" placeholder="Ex: Farinha de Trigo" required>
-                    </div>
-<div class="form-group">
-    <label for="unidade-medida">Unidade de Medida</label>
-    <select id="unidade-medida" required>
-        <option value="">Selecione...</option>
-        <option value="kg">Quilograma (kg)</option>
-        <option value="g">Grama (g)</option>
-        <option value="l">Litro (l)</option>
-        <option value="ml">Mililitro (ml)</option>
-        <option value="un">Unidade (un)</option>
-    </select>
-</div>
-                    <div class="form-group">
-                        <label for="preco-unitario">Preço de Compra (R$)</label>
-                        <input type="number" id="preco-unitario" placeholder="2.50" step="0.01" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="nivel_minimo_estoque">Estoque Mínimo</label>
-                        <input type="number" id="nivel_minimo_estoque" placeholder="Ex: 0.5" step="0.01" value="0" required>
-                    </div>
-                    <div class="form-group full-width">
-                        <button type="submit">Adicionar Insumo</button>
-                    </div>
-                </form>
+<form id="form-insumos" class="form-grid">
+    <div class="form-group full-width">
+        <label for="nome-insumo">Nome do Insumo</label>
+        <input type="text" id="nome-insumo" placeholder="Ex: Achocolatado Nescau" required>
+    </div>
+    <div class="form-group">
+        <label for="unidade-medida">Unidade de Medida (para Receitas)</label>
+        <select id="unidade-medida" required>
+            <option value="">Selecione...</option>
+            <option value="g">Grama (g)</option>
+            <option value="kg">Quilograma (kg)</option>
+            <option value="ml">Mililitro (ml)</option>
+            <option value="l">Litro (l)</option>
+            <option value="un">Unidade (un)</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="preco-compra">Preço de Compra do Pacote (R$)</label>
+        <input type="number" id="preco-compra" placeholder="10.99" step="0.01" required>
+    </div>
+    <div class="form-group">
+        <label for="quantidade-compra">Quantidade na Embalagem</label>
+        <input type="number" id="quantidade-compra" placeholder="350" step="0.01" required>
+        <small>Use a mesma unidade de medida (Ex: se a unidade é 'g', coloque o peso em gramas).</small>
+    </div>
+    <div class="form-group">
+        <label for="nivel_minimo_estoque">Estoque Mínimo</label>
+        <input type="number" id="nivel_minimo_estoque" placeholder="Ex: 100" step="0.01" value="0" required>
+        <small>Na mesma unidade de medida da receita.</small>
+    </div>
+    <div class="form-group full-width">
+        <button type="submit">Adicionar Insumo</button>
+    </div>
+</form>
                 <hr>
                 <table class="tabela-bonita">
                     <thead>
@@ -291,21 +297,28 @@
                             </form>
                             <hr>
                             <h3>2. Adicionar Insumos</h3>
-                            <form id="form-add-ne-item">
-                                <label for="ne-insumo">Insumo:</label>
-                                <select id="ne-insumo" required></select>
-                                <div class="form-grid">
-                                    <div class="form-group">
-                                        <label for="ne-quantidade">Quantidade:</label>
-                                        <input type="number" id="ne-quantidade" value="1" step="0.01" min="0.01" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="ne-preco">Preço Unitário (R$):</label>
-                                        <input type="number" id="ne-preco" step="0.01" min="0.01" required>
-                                    </div>
-                                </div>
-                                <button type="submit" class="btn-secundario">+ Adicionar Insumo</button>
-                            </form>
+<form id="form-add-ne-item">
+    <label for="ne-insumo">Insumo:</label>
+    <select id="ne-insumo" required></select>
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="ne-quantidade">Quantidade Comprada</label>
+            <input type="number" id="ne-quantidade" value="1" step="1" min="1" required>
+            <small>Quantas embalagens/unidades você comprou.</small>
+        </div>
+        <div class="form-group">
+            <label for="ne-preco-pacote">Preço por Embalagem (R$)</label>
+            <input type="number" id="ne-preco-pacote" step="0.01" min="0.01" required>
+            <small>Preço que você pagou em cada embalagem.</small>
+        </div>
+    </div>
+    <div class="form-group">
+         <label for="ne-quantidade-pacote">Peso/Volume por Embalagem</label>
+         <input type="number" id="ne-quantidade-pacote" step="0.01" min="0.01" required>
+         <small>Ex: 350 (para 350g). Preencha caso seja diferente do cadastro original.</small>
+    </div>
+    <button type="submit" class="btn-secundario">+ Adicionar Insumo</button>
+</form>
                         </div>
                         <div class="nota-fiscal-coluna">
                             <h3>Insumos da Nota</h3>
