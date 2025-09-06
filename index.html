@@ -492,13 +492,23 @@
             <div class="modal-colunas">
                 <div class="modal-coluna">
                     <h3><span class="emoji-titulo">🥣</span>Ingredientes</h3>
-                    <form id="form-adicionar-ingrediente">
-                        <label for="select-insumo-receita">Adicionar Insumo:</label>
-                        <select id="select-insumo-receita"></select>
-                        <label for="quantidade-ingrediente">Quantidade:</label>
-                        <input type="number" id="quantidade-ingrediente" placeholder="Ex: 0.5" step="0.01">
-                        <button type="submit">+ Adicionar</button>
-                    </form>
+                   <form id="form-adicionar-ingrediente">
+    <label for="select-insumo-receita">Adicionar Insumo:</label>
+    <select id="select-insumo-receita" required></select>
+    <small id="info-unidade-base" style="display: block; margin-bottom: 1rem; color: #6c757d;"></small>
+
+    <div style="display: grid; grid-template-columns: 1fr 120px; gap: 0.5rem; align-items: flex-end;">
+        <div>
+            <label for="quantidade-ingrediente">Quantidade a usar:</label>
+            <input type="number" id="quantidade-ingrediente" placeholder="Ex: 100" step="0.01" required>
+        </div>
+        <div>
+            <label for="select-unidade-receita">Unidade:</label>
+            <select id="select-unidade-receita" required></select>
+        </div>
+    </div>
+    <button type="submit" style="margin-top: 1rem;">+ Adicionar</button>
+</form>
                     <hr>
                     <h4>Ingredientes Atuais</h4>
                     <ul id="lista-ingredientes-modal"></ul>

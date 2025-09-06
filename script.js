@@ -427,6 +427,48 @@ document.addEventListener('DOMContentLoaded', () => {
     let rowsPerPageEntrada = 20;
     let sortColumnEntrada = 'data_compra';
     let sortDirectionEntrada = 'desc';
+    const selectInsumoReceita = document.getElementById('select-insumo-receita');
+const selectUnidadeReceita = document.getElementById('select-unidade-receita');
+const infoUnidadeBase = document.getElementById('info-unidade-base');
+
+// Mapa de unidades compatíveis
+const unidadesCompativeis = {
+    g: ['g', 'kg'],
+    kg: ['g', 'kg'],
+    ml: ['ml', 'l'],
+    l: ['ml', 'l'],
+    un: ['un']
+};
+
+// Fatores de conversão PARA A UNIDADE BASE
+const fatoresConversao = {
+    g: { g: 1, kg: 1000 },
+    kg: { g: 0.001, kg: 1 },
+    ml: { ml: 1, l: 1000 },
+    l: { ml: 0.001, l: 1 },
+    un: { un: 1 }
+};
+
+// Evento que dispara quando o usuário escolhe um insumo
+selectInsumoReceita.addEventListener('change', () => {
+    const insumoId = selectInsumoReceita.value;
+    if (!insumoId) {
+        infoUnidadeBase.textContent = '';
+        selectUnidadeReceita.innerHTML = '';
+        return;
+    }
+
+    const insumo = insumosData.find(i => i.id == insumoId);
+    if (!insumo) return;
+
+    const unidadeBase = insumo.unidade_medida;
+    infoUnidadeBase.textContent = `A unidade de medida base deste insumo é: ${unidadeBase}`;
+
+    // Popula o seletor de unidades com as opções compatíveis
+    const opcoes = unidadesCompativeis[unidadeBase] || [unidadeBase];
+    selectUnidadeReceita.innerHTML = opcoes.map(u => `<option value="${u}">${u}</option>`).join('');
+});
+
 
     const navLinks = document.querySelectorAll('.nav-link');
     const telas = document.querySelectorAll('.main-content .tela');
@@ -612,17 +654,43 @@ formEditarInsumo.addEventListener('submit', async (event) => {
         else { showNotification('Produto salvo!'); formProdutos.reset(); document.dispatchEvent(new CustomEvent('dadosAtualizados')); }
     });
 
-    formAdicionarIngrediente.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const produtoId = document.getElementById('gerenciar-produto-id').value;
-        const { error } = await supabaseClient.from('receitas').insert([{ 
-            produto_id: produtoId, 
-            insumo_id: document.getElementById('select-insumo-receita').value, 
-            quantidade: document.getElementById('quantidade-ingrediente').value 
-        }]);
-        if (error) { showNotification('Erro ao adicionar ingrediente.', 'error'); } 
-        else { formAdicionarIngrediente.reset(); carregarIngredientesNoModal(produtoId); }
-    });
+formAdicionarIngrediente.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    
+    const produtoId = document.getElementById('gerenciar-produto-id').value;
+    const insumoId = selectInsumoReceita.value;
+    const insumoSelecionado = insumosData.find(i => i.id == insumoId);
+
+    if (!insumoSelecionado) {
+        return showNotification('Erro: Insumo não encontrado.', 'error');
+    }
+
+    const quantidadeReceita = parseFloat(document.getElementById('quantidade-ingrediente').value);
+    const unidadeReceita = selectUnidadeReceita.value;
+    const unidadeBaseInsumo = insumoSelecionado.unidade_medida;
+
+    // Converte a quantidade da receita para a unidade base do insumo
+    const fator = fatoresConversao[unidadeBaseInsumo][unidadeReceita];
+    const quantidadeNaBase = quantidadeReceita * fator;
+
+    const { error } = await supabaseClient.from('receitas').insert([{ 
+        produto_id: produtoId, 
+        insumo_id: insumoId, 
+        quantidade: quantidadeNaBase // Salva a quantidade convertida
+    }]);
+
+    if (error) { 
+        showNotification('Erro ao adicionar ingrediente.', 'error'); 
+        console.error(error);
+    } else { 
+        showNotification(`Ingrediente adicionado (${quantidadeReceita} ${unidadeReceita}).`);
+        // Reseta apenas os campos de quantidade e foca nele
+        document.getElementById('quantidade-ingrediente').value = '';
+        document.getElementById('quantidade-ingrediente').focus();
+        
+        carregarIngredientesNoModal(produtoId); 
+    }
+});
     
     document.getElementById('btn-adicionar-custo').onclick = () => adicionarCampoDeCusto();
     document.getElementById('margem-lucro').addEventListener('input', recalcularAnaliseDeCustos);
@@ -1411,149 +1479,3 @@ formAddNeItem.addEventListener('submit', (event) => {
     });
 });
 
-// =======================================================================
-// SCRIPT DE MIGRAÇÃO COMPLETA DE DADOS - PODE SER REMOVIDO APÓS O USO
-// =======================================================================
-async function migrarInsumosCompleto() {
-    console.log("🚀 INICIANDO MIGRAÇÃO COMPLETA DE DADOS DE INSUMOS...");
-
-    const dadosOriginais = [
-        { nome: "Achocolatado Nescau", preco: 10.99, info: "350 gr" },
-        { nome: "Açucar Caravela", preco: 3.59, info: "3 kg" },
-        { nome: "Açúcar Mascavo da casa", preco: 11.49, info: "1 kg" },
-        { nome: "açucar refinado alto alegre", preco: 4.69, info: "1 kg" },
-        { nome: "Amido de milho da casa", preco: 7.50, info: "1 kg" },
-        { nome: "Bandeja de ovos", preco: 20.00, info: "20 unid" },
-        { nome: "caixa kraft branca 16,9x12x5 visor transparente", preco: 3.75, info: "unidade" },
-        { nome: "Chantilly Norcau 1 litro", preco: 26.99, info: "lt" },
-        { nome: "Chocolate branco 2,1 kg sicao", preco: 204.00, info: "Kg" },
-        { nome: "Chocolate em pó Melken 100%, 500gr", preco: 40.00, info: "Gr" },
-        { nome: "Chocolate em pó Melken 50% 1,010kg", preco: 46.99, info: "Kg" },
-        { nome: "Chocolate meio amargo Sicao", preco: 199.00, info: "2,1 kg" },
-        { nome: "Cobertura meio amargo Sicao", preco: 62.91, info: "2,1 kg" },
-        { nome: "Coco ralado médio da casa 1 Kg", preco: 36.00, info: "Kg" },
-        { nome: "Corante softgel vermelho natal", preco: 4.69, info: "unid 1" },
-        { nome: "Creme de leite CCGL 200GR, 20 unid.", preco: 55.84, info: "unid" },
-        { nome: "Cremor de tártaro arcolor 40g", preco: 7.50, info: "g" },
-        { nome: "Doce de leite 350gr tirol", preco: 11.00, info: "gr" },
-        { nome: "Doce de leite 800gr itambé", preco: 29.49, info: "LT" },
-        { nome: "Embalagem p/bolo base tampa 70M-branca", preco: 7.75, info: "unid 1" },
-        { nome: "Embalagem p/bolo base tampa PF 56", preco: 3.99, info: "Unid" },
-        { nome: "Embalagem p/bolo base tampa PF 60", preco: 4.99, info: "Unid" },
-        { nome: "Embalagem para trufas azul claro 14,5X15,5 c/100 unid. cromus", preco: 12.90, info: "1 unid." },
-        { nome: "Embalagem para trufas liso turquesa 14,5X15,5 com 100unid. cromus", preco: 13.35, info: "4 unid" },
-        { nome: "Embalagem para trufas rose gold 14,5X15,5 com 100unid. cromus", preco: 13.35, info: "1 unid" },
-        { nome: "Embalagem pote 145 ml com tampa, 850 embalagem", preco: 291.16, info: "pacote" },
-        { nome: "Farinha de arroz sabor verde", preco: 10.25, info: "1 kg" },
-        { nome: "farinha de trigo nordeste", preco: 4.09, info: "1 kg" },
-        { nome: "Fécula de milho da casa", preco: 13.25, info: "1 kg" },
-        { nome: "Filme PVC 50m", preco: 30.00, info: "metro" },
-        { nome: "Fita cetin nº 01, 2 uni.", preco: 6.00, info: "Unid" },
-        { nome: "Fita cetin nº 05, 1 uni.", preco: 7.00, info: "uni" },
-        { nome: "Fita cetin nº 09, 1 uni.", preco: 12.00, info: "unid 1" },
-        { nome: "Glucose de milho 1 kg", preco: 16.99, info: "Kg" },
-        { nome: "goiabada oliveira 300gr", preco: 5.29, info: "300gr" },
-        { nome: "Granulado Chocolate ao leite Melken", preco: 18.50, info: "130gr" },
-        { nome: "Granulado Chocolate Dori", preco: 11.25, info: "pct 11,25" },
-        { nome: "Kit cortador coração com três peças", preco: 12.75, info: "1 unid" },
-        { nome: "Leite condensado 395 gr Piracanjuba, 15 unid,", preco: 80.88, info: "Unid" },
-        { nome: "Leite condensado tirol", preco: 5.49, info: "un" },
-        { nome: "Leite em pó ninho 380gr", preco: 17.99, info: "unid." },
-        { nome: "Leite Integral de 01 litro, 1 unid.", preco: 5.59, info: "Unid" },
-        { nome: "Manteiga Estrela do Campo", preco: 44.00, info: "kg" },
-        { nome: "Margarina com sal Qualy 500gr", preco: 10.99, info: "gr" },
-        { nome: "Nescau nestle 2 kg 3 pacotes", preco: 152.10, info: "Pc" },
-        { nome: "Nutella creme de avelá 650gr", preco: 39.90, info: "gr" },
-        { nome: "Polvilho doce barra velha", preco: 11.95, info: "1 kg" }
-    ];
-
-    // Mapeamento de texto para dados estruturados
-    const mapaDeDados = {
-        "Achocolatado Nescau": { unidade: "g", qtd: 350 },
-        "Açucar Caravela": { unidade: "kg", qtd: 3 },
-        "Açúcar Mascavo da casa": { unidade: "kg", qtd: 1 },
-        "açucar refinado alto alegre": { unidade: "kg", qtd: 1 },
-        "Amido de milho da casa": { unidade: "kg", qtd: 1 },
-        "Bandeja de ovos": { unidade: "un", qtd: 20 },
-        "caixa kraft branca 16,9x12x5 visor transparente": { unidade: "un", qtd: 1 },
-        "Chantilly Norcau 1 litro": { unidade: "l", qtd: 1 },
-        "Chocolate branco 2,1 kg sicao": { unidade: "kg", qtd: 2.1 },
-        "Chocolate em pó Melken 100%, 500gr": { unidade: "g", qtd: 500 },
-        "Chocolate em pó Melken 50% 1,010kg": { unidade: "kg", qtd: 1.01 },
-        "Chocolate meio amargo Sicao": { unidade: "kg", qtd: 2.1 },
-        "Cobertura meio amargo Sicao": { unidade: "kg", qtd: 2.1 },
-        "Coco ralado médio da casa 1 Kg": { unidade: "kg", qtd: 1 },
-        "Corante softgel vermelho natal": { unidade: "un", qtd: 1 },
-        "Creme de leite CCGL 200GR, 20 unid.": { unidade: "un", qtd: 20 },
-        "Cremor de tártaro arcolor 40g": { unidade: "g", qtd: 40 },
-        "Doce de leite 350gr tirol": { unidade: "g", qtd: 350 },
-        "Doce de leite 800gr itambé": { unidade: "g", qtd: 800 },
-        "Embalagem p/bolo base tampa 70M-branca": { unidade: "un", qtd: 1 },
-        "Embalagem p/bolo base tampa PF 56": { unidade: "un", qtd: 1 },
-        "Embalagem p/bolo base tampa PF 60": { unidade: "un", qtd: 1 },
-        "Embalagem para trufas azul claro 14,5X15,5 c/100 unid. cromus": { unidade: "un", qtd: 100 },
-        "Embalagem para trufas liso turquesa 14,5X15,5 com 100unid. cromus": { unidade: "un", qtd: 100 },
-        "Embalagem para trufas rose gold 14,5X15,5 com 100unid. cromus": { unidade: "un", qtd: 100 },
-        "Embalagem pote 145 ml com tampa, 850 embalagem": { unidade: "un", qtd: 850 },
-        "Farinha de arroz sabor verde": { unidade: "kg", qtd: 1 },
-        "farinha de trigo nordeste": { unidade: "kg", qtd: 1 },
-        "Fécula de milho da casa": { unidade: "kg", qtd: 1 },
-        "Filme PVC 50m": { unidade: "un", qtd: 1 },
-        "Fita cetin nº 01, 2 uni.": { unidade: "un", qtd: 2 },
-        "Fita cetin nº 05, 1 uni.": { unidade: "un", qtd: 1 },
-        "Fita cetin nº 09, 1 uni.": { unidade: "un", qtd: 1 },
-        "Glucose de milho 1 kg": { unidade: "kg", qtd: 1 },
-        "goiabada oliveira 300gr": { unidade: "g", qtd: 300 },
-        "Granulado Chocolate ao leite Melken": { unidade: "g", qtd: 130 },
-        "Granulado Chocolate Dori": { unidade: "un", qtd: 1 },
-        "Kit cortador coração com três peças": { unidade: "un", qtd: 1 },
-        "Leite condensado 395 gr Piracanjuba, 15 unid,": { unidade: "un", qtd: 15 },
-        "Leite condensado tirol": { unidade: "un", qtd: 1 },
-        "Leite em pó ninho 380gr": { unidade: "g", qtd: 380 },
-        "Leite Integral de 01 litro, 1 unid.": { unidade: "l", qtd: 1 },
-        "Manteiga Estrela do Campo": { unidade: "kg", qtd: 1 },
-        "Margarina com sal Qualy 500gr": { unidade: "g", qtd: 500 },
-        "Nescau nestle 2 kg 3 pacotes": { unidade: "kg", qtd: 6 }, // 3 pacotes * 2kg
-        "Nutella creme de avelá 650gr": { unidade: "g", qtd: 650 },
-        "Polvilho doce barra velha": { unidade: "kg", qtd: 1 },
-    };
-
-    const { data: insumosDB, error } = await supabaseClient.from('insumos').select('id, nome');
-    if (error) {
-        alert("ERRO: Falha ao buscar insumos do Supabase. Veja o console.");
-        return;
-    }
-
-    let atualizacoes = [];
-    for (const item of dadosOriginais) {
-        const insumoDB = insumosDB.find(i => i.nome.trim().toLowerCase() === item.nome.trim().toLowerCase());
-        const dadosMapeados = mapaDeDados[item.nome.trim()];
-
-        if (insumoDB && dadosMapeados) {
-            const precoUnitario = item.preco / dadosMapeados.qtd;
-            atualizacoes.push({
-                id: insumoDB.id,
-                unidade_medida: dadosMapeados.unidade,
-                preco_unitario: precoUnitario,
-                ultimo_preco_compra: item.preco,
-                ultima_qtd_embalagem: dadosMapeados.qtd
-            });
-            console.log(`✅ Preparado para atualizar "${item.nome}"`);
-        } else {
-            console.warn(`⚠️ Insumo "${item.nome}" não encontrado ou não mapeado. Pulando...`);
-        }
-    }
-
-    if (atualizacoes.length > 0) {
-        const { error: updateError } = await supabaseClient.from('insumos').upsert(atualizacoes);
-        if (updateError) {
-            alert("ERRO GERAL AO ATUALIZAR DADOS! Veja o console.");
-            console.error(updateError);
-        } else {
-            alert(`🎉 MIGRAÇÃO CONCLUÍDA! ${atualizacoes.length} insumos foram corrigidos e atualizados com sucesso!`);
-            document.dispatchEvent(new CustomEvent('dadosAtualizados'));
-        }
-    } else {
-        alert("Nenhuma atualização foi necessária. Verifique se os nomes dos insumos no script correspondem aos do banco.");
-    }
-}
