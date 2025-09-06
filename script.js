@@ -1248,78 +1248,7 @@ formAddNeItem.addEventListener('submit', (event) => {
         document.dispatchEvent(new CustomEvent('dadosAtualizados'));
     });
 
-    ormEditAddNeItem.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const insumoId = document.getElementById('edit-ne-insumo').value;
-    const preco = parseFloat(document.getElementById('edit-ne-preco').value);
-
-    if (!insumoId || !preco || preco <= 0) {
-        return showNotification('Selecione um insumo e preencha um preço válido.', 'error');
-    }
     
-    const insumoSelecionado = insumosData.find(i => i.id == insumoId);
-    
-    editNeItens.push({
-        insumo_id: parseInt(insumoId, 10),
-        nome: insumoSelecionado.nome,
-        quantidade: parseFloat(document.getElementById('edit-ne-quantidade').value),
-        preco_unitario_momento: preco
-    });
-    renderizarItensNeEdicao();
-    event.target.reset();
-});
-
-btnAtualizarNe.addEventListener('click', async () => {
-    const notaId = document.getElementById('edit-ne-hidden-id').value;
-    if (!notaId) return;
-
-    if (editNeItens.length === 0) return showNotification('A nota de compra não pode ficar sem insumos.', 'error');
-
-    // O valor total é a soma dos itens (quantidade * preco_unitario_momento)
-    // Diferente da nota de saída, aqui a quantidade já está na unidade base
-    const valorTotal = editNeItens.reduce((acc, item) => {
-        const itemTotal = item.quantidade * item.preco_unitario_momento;
-        return acc + itemTotal;
-    }, 0);
-    
-    const { error: updateError } = await supabaseClient.from('notas_entrada').update({
-        fornecedor_id: document.getElementById('edit-ne-fornecedor').value,
-        data_compra: document.getElementById('edit-ne-data').value,
-        valor_total: valorTotal
-    }).match({ id: notaId });
-
-    if (updateError) {
-        console.error("Erro ao atualizar a nota de compra:", updateError);
-        return showNotification('Falha ao atualizar a nota de compra.', 'error');
-    }
-
-    // Deleta os itens antigos para depois inserir os novos
-    const { error: deleteError } = await supabaseClient.from('nota_entrada_itens').delete().match({ nota_entrada_id: notaId });
-    if (deleteError) {
-        console.error("Erro ao deletar insumos antigos:", deleteError);
-        return showNotification('Falha ao limpar insumos antigos.', 'error');
-    }
-
-    const novosItensParaSalvar = editNeItens.map(item => ({
-        nota_entrada_id: notaId,
-        insumo_id: item.insumo_id,
-        quantidade: item.quantidade, // A quantidade já está correta (na unidade base)
-        preco_unitario_momento: item.preco_unitario_momento
-    }));
-
-    const { error: insertError } = await supabaseClient.from('nota_entrada_itens').insert(novosItensParaSalvar);
-    
-    if (insertError) {
-        console.error("Erro ao inserir novos insumos:", insertError);
-        return showNotification('Falha ao salvar os novos insumos.', 'error');
-    }
-
-    showNotification('Nota de Compra atualizada com sucesso!');
-    document.getElementById('modal-editar-nota-entrada').style.display = 'none';
-    document.dispatchEvent(new CustomEvent('dadosAtualizados'));
-});
-
-
     async function atualizarTodosOsDados() {
         try {
             const [insumosResult, produtosResult, contatosResult, notasSaidaResult, notasEntradaResult] = await Promise.all([

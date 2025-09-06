@@ -70,6 +70,7 @@ async function calcularEExibirEstoque() {
     }
 }
 
+// Em estoque.js
 function renderizarTabelaEstoque(estoque) {
     const corpoTabela = document.getElementById('corpo-tabela-estoque');
     const filtro = document.getElementById('filtro-busca-estoque').value.toLowerCase();
@@ -77,10 +78,10 @@ function renderizarTabelaEstoque(estoque) {
 
     let dadosFiltrados = estoque.filter(item => item.nome.toLowerCase().includes(filtro));
 
+    // Ordenação (já estava correta)
     dadosFiltrados.sort((a, b) => {
         const valA = (typeof a[sortColumnEstoque] === 'string') ? a[sortColumnEstoque].toLowerCase() : a[sortColumnEstoque];
         const valB = (typeof b[sortColumnEstoque] === 'string') ? b[sortColumnEstoque].toLowerCase() : b[sortColumnEstoque];
-
         if (valA < valB) return sortDirectionEstoque === 'asc' ? -1 : 1;
         if (valA > valB) return sortDirectionEstoque === 'asc' ? 1 : -1;
         return 0;
@@ -97,19 +98,24 @@ function renderizarTabelaEstoque(estoque) {
         let statusClass = 'status-ok';
         let statusText = 'OK';
         
+        // Lógica de status (já estava correta, apenas corrigido o texto "Zerad")
         if (item.estoqueAtual <= 0) {
             statusClass = 'status-zerado';
-            statusText = 'Zerado'; // Corrigido de "Zerad"
+            statusText = 'Zerado';
         } else if (item.estoqueAtual <= item.nivel_minimo_estoque) {
             statusClass = 'status-baixo';
             statusText = 'Baixo';
         }
+        
+        // MELHORIA NA EXIBIÇÃO DOS NÚMEROS
+        const estoqueAtualFmt = `${item.estoqueAtual.toFixed(2)} ${item.unidade_medida}`;
+        const estoqueMinimoFmt = `${item.nivel_minimo_estoque.toFixed(2)} ${item.unidade_medida}`;
 
         tr.innerHTML = `
             <td>${item.nome}</td>
             <td>${item.unidade_medida}</td>
-            <td>${item.estoqueAtual.toFixed(2)}</td>
-            <td>${item.nivel_minimo_estoque.toFixed(2)}</td>
+            <td><strong>${estoqueAtualFmt}</strong></td>
+            <td>${estoqueMinimoFmt}</td>
             <td><span class="status ${statusClass}">${statusText}</span></td>
         `;
         corpoTabela.appendChild(tr);
